@@ -73,8 +73,18 @@ libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % 
 //     name := "hello-world"
 //   )
 
-lazy val graph = (project in file("graph"))
-lazy val ui = (project in file("ui"))
+lazy val graph = (project in file("graph")).settings(
+  name := "graph",
+  organization := "com.scala",
+  version := "0.1.0",
+  scalaVersion := "3.3.3"
+)
+lazy val ui = (project in file("ui")).settings(
+  name := "ui",
+  organization := "com.scala",
+  version := "0.1.0",
+  scalaVersion := "3.3.3"
+)
 
 // To learn more about multi-project builds, head over to the official sbt
 // documentation at http://www.scala-sbt.org/documentation.html
