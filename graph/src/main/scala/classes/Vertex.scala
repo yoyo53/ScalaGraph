@@ -1,4 +1,5 @@
-class Vertex(val graph: Graph, val name: String) {
+
+case class Vertex(val graph: Graph, val name: String) {
     override def toString: String = name
 
     override def equals(obj: Any): Boolean = obj match {
