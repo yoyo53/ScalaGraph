@@ -1,30 +1,48 @@
 package com.scala.graph
 
-case class Edge[+T](val v1: Vertex[T], val v2: Vertex[T], val direction: Direction = Direction.Undirected, val weight: Option[Int] = None) {
-    override def toString: String = {
-        val weightStr = if (weight.isDefined) s" (${weight.get})" else ""
-        val dir = direction match {
-            case Direction.Undirected => "--"
-            case Direction.Forward => "->"
-            case Direction.Backward => "<-"
-        }
-        s"${v1.toString} ${dir} ${v2.toString}${weightStr}"
-    }
+trait EdgeLike[+T] {
+    val v1: Vertex[T]
+    val v2: Vertex[T]
+    val direction: Direction
+    val weight: Option[Int]
 
     override def equals(obj: Any): Boolean = obj match {
-        case e: Edge[T] => weight == e.weight && (
+        case e: EdgeLike[_] => weight == e.weight && (
             (v1 == e.v1 && v2 == e.v2 && direction == e.direction)
             || (v1 == e.v2 && v2 == e.v1 && direction == e.direction.inverse)
         )
         case _ => false
     }
 
-    override def hashCode: Int = {
+    override def hashCode(): Int = {
         val prime = 31
-        var result = 1
-        result = prime * result + v1.hashCode
-        result = prime * result + v2.hashCode
-        result = prime * result + direction.hashCode
-        result
+        var result = direction match {
+            case Direction.Undirected => prime * prime * v1.hashCode() + v2.hashCode()
+            case Direction.Forward => prime * v2.hashCode() + v1.hashCode()
+            case Direction.Backward => prime * v1.hashCode() + v2.hashCode()
+        }
+        result * prime + weight.hashCode()
     }
+}
+
+trait DirectedEdgeLike[+T] extends EdgeLike[T] {
+    val direction: DirectedDirection
+}
+
+trait UndirectedEdgeLike[+T] extends EdgeLike[T] {
+    val direction = Direction.Undirected
+}
+
+case class DirectedEdge[+T](val v1: Vertex[T], val v2: Vertex[T], val direction: DirectedDirection) extends DirectedEdgeLike[T] {
+    val weight = None
+}
+
+case class UndirectedEdge[+T](val v1: Vertex[T], val v2: Vertex[T]) extends UndirectedEdgeLike[T] {
+    val weight = None
+}
+
+case class WeightedDirectedEdge[+T](val v1: Vertex[T], val v2: Vertex[T], direction: DirectedDirection, val weight: Some[Int]) extends DirectedEdgeLike[T] {
+}
+
+case class WeightedUndirectedEdge[+T](val v1: Vertex[T], val v2: Vertex[T], val weight: Some[Int]) extends UndirectedEdgeLike[T] {
 }
