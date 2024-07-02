@@ -8,3 +8,5 @@ enum Direction {
         case Backward => Forward
     }
 }
+
+type DirectedDirection = Direction.Forward.type | Direction.Backward.type
