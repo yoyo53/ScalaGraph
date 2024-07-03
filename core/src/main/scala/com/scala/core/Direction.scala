@@ -1,4 +1,4 @@
-package com.scala.graph
+package com.scala.core
 
 enum Direction {
     case Undirected, Forward, Backward

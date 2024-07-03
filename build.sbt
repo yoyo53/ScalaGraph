@@ -73,8 +73,8 @@ libraryDependencies += "org.scala-lang.modules" %% "scala-parser-combinators" % 
 //     name := "hello-world"
 //   )
 
-lazy val graph = (project in file("graph")).settings(
-  name := "graph",
+lazy val core = (project in file("core")).settings(
+  name := "core",
   organization := "com.scala",
   version := "0.1.0",
   scalaVersion := "3.3.3"
