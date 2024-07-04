@@ -180,9 +180,10 @@ object DirectedGraph {
 
 extension [T](g: DirectedGraph[T]) {
     def serializeGraphViz: String = {
-        val verticesStr = g.vertices.map((v) => s"${v.id} [data=${v.data.getOrElse("null")}];").mkString("\n")
-        val edgesStr = g.edges.map((e) => s"${e.v1.id} -> ${e.v2.id};").mkString("\n")
-        s"digraph G {\n$verticesStr\n$edgesStr\n}"
+        val start = "digraph G {\n"
+        val verticesStr = g.vertices.foldLeft(start)((acc, v) => acc + s"${v.id} [data=${v.data.getOrElse("null")}];\n")
+        val edgesStr = g.edges.foldLeft(verticesStr)((acc, e) => acc + s"${e.v1.id} -> ${e.v2.id};\n")
+        s"$edgesStr}"
     }
 }
 
@@ -222,9 +223,10 @@ object UndirectedGraph {
 
 extension [T](g: UndirectedGraph[T]) {
     def serializeGraphViz: String = {
-        val verticesStr = g.vertices.map((v) => s"${v.id} [data=${v.data.getOrElse("null")}];").mkString("\n")
-        val edgesStr = g.edges.map((e) => s"${e.v1.id} -- ${e.v2.id};").mkString("\n")
-        s"graph G {\n$verticesStr\n$edgesStr\n}"
+        val start = "graph G {\n"
+        val verticesStr = g.vertices.foldLeft(start)((acc, v) => acc + s"${v.id} [data=${v.data.getOrElse("null")}];\n")
+        val edgesStr = g.edges.foldLeft(verticesStr)((acc, e) => acc + s"${e.v1.id} -- ${e.v2.id};\n")
+        s"$edgesStr}"
     }
 }
 
@@ -347,9 +349,10 @@ object WeightedDirectedGraph {
 
 extension [T](g: WeightedDirectedGraph[T]) {
     def serializeGraphViz: String = {
-        val verticesStr = g.vertices.map((v) => s"${v.id} [data=${v.data.getOrElse("null")}];").mkString("\n")
-        val edgesStr = g.edges.map((e) => s"${e.v1.id} -> ${e.v2.id} [weight=${e.weight.get}];").mkString("\n")
-        s"digraph G {\n$verticesStr\n$edgesStr\n}"
+        val start = "digraph G {\n"
+        val verticesStr = g.vertices.foldLeft(start)((acc, v) => acc + s"${v.id} [data=${v.data.getOrElse("null")}];\n")
+        val edgesStr = g.edges.foldLeft(verticesStr)((acc, e) => acc + s"${e.v1.id} -> ${e.v2.id} [weight=${e.weight.get}];\n")
+        s"$edgesStr}"
     }
 }
 
@@ -389,8 +392,9 @@ object WeightedUndirectedGraph {
 
 extension [T](g: WeightedUndirectedGraph[T]) {
     def serializeGraphViz: String = {
-        val verticesStr = g.vertices.map((v) => s"${v.id} [data=${v.data.getOrElse("null")}];").mkString("\n")
-        val edgesStr = g.edges.map((e) => s"${e.v1.id} -- ${e.v2.id} [weight=${e.weight.get}];").mkString("\n")
-        s"graph G {\n$verticesStr\n$edgesStr\n}"
+        val start = "graph G {\n"
+        val verticesStr = g.vertices.foldLeft(start)((acc, v) => acc + s"${v.id} [data=${v.data.getOrElse("null")}];\n")
+        val edgesStr = g.edges.foldLeft(verticesStr)((acc, e) => acc + s"${e.v1.id} -- ${e.v2.id} [weight=${e.weight.get}];\n")
+        s"$edgesStr}"
     }
 }
