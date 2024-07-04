@@ -1,24 +1,37 @@
 package com.scala.core
 
 import scala.util.{Try, Success, Failure}
+import zio.json._
 
 sealed trait GraphLike[T, E <: EdgeLike[_ <: T]] {
     type Self[U] <: GraphLike[U, _ <: EdgeLike[_ <: U]]
     type Edge[U] <: EdgeLike[U]
 
-    val vertices: Set[Vertex[_ <: T]]
-    val edges: Set[E]
+    protected val vertices: Set[Vertex[_ <: T]]
+    protected val edges: Set[E]
+
+    implicit val verticesEncoder: JsonEncoder[Set[Vertex[_ <: T]]] = JsonEncoder[Set[Vertex[T]]].contramap(_.asInstanceOf[Set[Vertex[T]]])
+    implicit val edgesEncoder: JsonEncoder[Set[E]]
+    implicit val selfEncoder : JsonEncoder[Self[T]]
+
+    implicit val verticesDecoder: JsonDecoder[Set[Vertex[_ <: T]]] = JsonDecoder[Set[Vertex[T]]].map(_.asInstanceOf[Set[Vertex[_ <: T]]])
+    implicit val edgesDecoder: JsonDecoder[Set[E]]
+    implicit val selfDecoder: JsonDecoder[Self[T]]
+
+    def getVertices: Set[Vertex[_ <: T]] = vertices
 
     def addVertex[U <: T](v: Vertex[U]): Self[U] = {
         copy(newVertices = this.vertices + v)
     }
 
-    def addEdge[U <: T](e: E): Self[U] = {
-        copy(newEdges = this.edges + e)
-    }
-
     def removeVertex[U <: T](v: Vertex[U]): Self[U] = {
         copy(newVertices = this.vertices - v)
+    }
+
+    def getEdges: Set[E] = edges
+
+    def addEdge[U <: T](e: E): Self[U] = {
+        copy(newEdges = this.edges + e)
     }
 
     def removeEdge[U <: T](e: E): Self[U] = {
@@ -45,7 +58,6 @@ sealed trait GraphLike[T, E <: EdgeLike[_ <: T]] {
         getSuccessorsEdges(v).map((e) => if (e.v1 == v) e.v2 else e.v1)
     }
 
-
     def hasCycle: Boolean = {
         @annotation.tailrec
         def _hasCycle(rest: Set[Vertex[_ <: T]], visited: Set[Vertex[_ <: T]]): Boolean = rest match {
@@ -64,15 +76,14 @@ sealed trait GraphLike[T, E <: EdgeLike[_ <: T]] {
         _hasCycle(vertices, Set())
     }
 
-
     def create[U <: T](newVertices: Set[Vertex[_ <: T]], newEdges: Set[E]): Self[U]
 
     def copy[U <: T](newVertices: Set[Vertex[_ <: T]] = this.vertices, newEdges: Set[E] = this.edges): Self[U] = {
         create(newVertices, newEdges)
     }
 
-    def serialize: String = ""
-    def deserialize[U <: T](s: String): Self[U] = ???
+    def serializeJSON: String
+    def deserializeJSON(s: String): Self[T]
 
     override def toString(): String = {
         s"Graph:\nVertices:\n${this.vertices}\nEdges:\n${edges}"
@@ -81,7 +92,7 @@ sealed trait GraphLike[T, E <: EdgeLike[_ <: T]] {
 
 
 
-sealed trait DirectedGraphLike[T, E <: DirectedEdgeLike[T]] extends GraphLike[T, E] {
+sealed trait DirectedGraphLike[T, E <: DirectedEdgeLike[_ <: T]] extends GraphLike[T, E] {
     def getSources: Set[Vertex[_ <: T]] = {
         vertices.filter((v) => getPredecessors(v).isEmpty)
     }
@@ -116,7 +127,7 @@ sealed trait DirectedGraphLike[T, E <: DirectedEdgeLike[T]] extends GraphLike[T,
     }
 }
 
-sealed trait UndirectedGraphLike[T, E <: UndirectedEdgeLike[T]] extends GraphLike[T, E] {
+sealed trait UndirectedGraphLike[T, E <: UndirectedEdgeLike[_ <: T]] extends GraphLike[T, E] {
     def getSuccessorsEdges[U <: T](v: Vertex[U]): Set[E] = {
         getNeighborsEdges(v)
     }
@@ -126,29 +137,39 @@ sealed trait UndirectedGraphLike[T, E <: UndirectedEdgeLike[T]] extends GraphLik
     }
 }
 
-sealed trait WeightedGraphLike[T, E <: WeightedEdgeLike[T]] extends GraphLike[T, E] {
+sealed trait WeightedGraphLike[T, E <: WeightedEdgeLike[_ <: T]] extends GraphLike[T, E] {
 }
 
-sealed trait UnweightedGraphLike[T, E <: UnweightedEdgeLike[T]] extends GraphLike[T, E] {
+sealed trait UnweightedGraphLike[T, E <: UnweightedEdgeLike[_ <: T]] extends GraphLike[T, E] {
 }
 
 
 
-case class DirectedGraph[T](override val vertices: Set[Vertex[_ <: T]], override val edges: Set[DirectedEdge[T]]) extends DirectedGraphLike[T, DirectedEdge[T]] with UnweightedGraphLike[T, DirectedEdge[T]] {
+case class DirectedGraph[T](override val vertices: Set[Vertex[_ <: T]], override val edges: Set[DirectedEdge[_ <: T]]) extends DirectedGraphLike[T, DirectedEdge[_ <: T]] with UnweightedGraphLike[T, DirectedEdge[_ <: T]] {
     override type Self[U] = DirectedGraph[U]
     override type Edge[U] = DirectedEdge[U]
 
-    override def create[U <: T](newVertices: Set[Vertex[_ <: T]], newEdges: Set[Edge[T]]): Self[U] = {
+    override implicit val edgesEncoder: JsonEncoder[Set[Edge[_ <: T]]] = JsonEncoder[Set[EdgeLike[T]]].contramap(_.asInstanceOf[Set[EdgeLike[T]]])
+    override implicit val selfEncoder: JsonEncoder[Self[T]] = EncoderWithType(this.getClass.getSimpleName)(DeriveJsonEncoder.gen[Self[T]])
+    override implicit val edgesDecoder: JsonDecoder[Set[Edge[_ <: T]]] = JsonDecoder[Set[EdgeLike[T]]].map(_.asInstanceOf[Set[Edge[_ <: T]]])
+    override implicit val selfDecoder: JsonDecoder[Self[T]] = DecoderWithType(this.getClass.getSimpleName)(DeriveJsonDecoder.gen[Self[T]])
+
+
+    override def create[U <: T](newVertices: Set[Vertex[_ <: T]], newEdges: Set[Edge[_ <: T]]): Self[U] = {
         new Self[T](vertices = newVertices, edges = newEdges).asInstanceOf[Self[U]]
     }
 
-    override def deserialize[U <: T](s: String): Self[U] = {
-        DirectedGraph[U]()
+    override def deserializeJSON(s: String): Self[T] = {
+        s.fromJson[Self[T]].getOrElse(throw new Exception("Failed to deserialize Graph"))
+    }
+
+    override def serializeJSON: String = {
+        this.toJson
     }
 }
 
 object DirectedGraph {
-    def apply[T](vertices: Set[Vertex[_ <: T]], edges: Set[DirectedEdge[T]]): DirectedGraph[T] = {
+    def apply[T](vertices: Set[Vertex[_ <: T]], edges: Set[DirectedEdge[_ <: T]]): DirectedGraph[T] = {
         new DirectedGraph[T](vertices, edges)
     }
 
@@ -157,23 +178,40 @@ object DirectedGraph {
     }
 }
 
+extension [T](g: DirectedGraph[T]) {
+    def serializeGraphViz: String = {
+        val verticesStr = g.vertices.map((v) => s"${v.id} [data=${v.data.getOrElse("null")}];").mkString("\n")
+        val edgesStr = g.edges.map((e) => s"${e.v1.id} -> ${e.v2.id};").mkString("\n")
+        s"digraph G {\n$verticesStr\n$edgesStr\n}"
+    }
+}
 
 
-case class UndirectedGraph[T](override val vertices: Set[Vertex[_ <: T]], override val edges: Set[UndirectedEdge[T]]) extends UndirectedGraphLike[T, UndirectedEdge[T]] with UnweightedGraphLike[T, UndirectedEdge[T]] {
+
+case class UndirectedGraph[T](override val vertices: Set[Vertex[_ <: T]], override val edges: Set[UndirectedEdge[_ <: T]]) extends UndirectedGraphLike[T, UndirectedEdge[_ <: T]] with UnweightedGraphLike[T, UndirectedEdge[_ <: T]] {
     override type Self[U] = UndirectedGraph[U]
     override type Edge[U] = UndirectedEdge[U]
 
-    override def create[U <: T](newVertices: Set[Vertex[_ <: T]], newEdges: Set[Edge[T]]): Self[U] = {
+    override implicit val edgesEncoder: JsonEncoder[Set[Edge[_ <: T]]] = JsonEncoder[Set[EdgeLike[T]]].contramap(_.asInstanceOf[Set[EdgeLike[T]]])
+    override implicit val selfEncoder: JsonEncoder[Self[T]] = EncoderWithType(this.getClass.getSimpleName)(DeriveJsonEncoder.gen[Self[T]])
+    override implicit val edgesDecoder: JsonDecoder[Set[Edge[_ <: T]]] = JsonDecoder[Set[EdgeLike[T]]].map(_.asInstanceOf[Set[Edge[_ <: T]]])
+    override implicit val selfDecoder: JsonDecoder[Self[T]] = DecoderWithType(this.getClass.getSimpleName)(DeriveJsonDecoder.gen[Self[T]])
+
+    override def create[U <: T](newVertices: Set[Vertex[_ <: T]], newEdges: Set[Edge[_ <: T]]): Self[U] = {
         new Self[T](vertices = newVertices, edges = newEdges).asInstanceOf[Self[U]]
     }
 
-    override def deserialize[U <: T](s: String): Self[U] = {
-        UndirectedGraph[U]()
+    override def deserializeJSON(s: String): Self[T] = {
+        s.fromJson[Self[T]].getOrElse(throw new Exception("Failed to deserialize Graph"))
+    }
+
+    override def serializeJSON: String = {
+        this.toJson
     }
 }
 
 object UndirectedGraph {
-    def apply[T](vertices: Set[Vertex[_ <: T]], edges: Set[UndirectedEdge[T]]): UndirectedGraph[T] = {
+    def apply[T](vertices: Set[Vertex[_ <: T]], edges: Set[UndirectedEdge[_ <: T]]): UndirectedGraph[T] = {
         new UndirectedGraph[T](vertices, edges)
     }
 
@@ -182,19 +220,35 @@ object UndirectedGraph {
     }
 }
 
+extension [T](g: UndirectedGraph[T]) {
+    def serializeGraphViz: String = {
+        val verticesStr = g.vertices.map((v) => s"${v.id} [data=${v.data.getOrElse("null")}];").mkString("\n")
+        val edgesStr = g.edges.map((e) => s"${e.v1.id} -- ${e.v2.id};").mkString("\n")
+        s"graph G {\n$verticesStr\n$edgesStr\n}"
+    }
+}
 
 
 
-case class WeightedDirectedGraph[T](override val vertices: Set[Vertex[_ <: T]], override val edges: Set[WeightedDirectedEdge[T]]) extends DirectedGraphLike[T, WeightedDirectedEdge[T]] with WeightedGraphLike[T, WeightedDirectedEdge[T]] {
+case class WeightedDirectedGraph[T](override val vertices: Set[Vertex[_ <: T]], override val edges: Set[WeightedDirectedEdge[_ <: T]]) extends DirectedGraphLike[T, WeightedDirectedEdge[_ <: T]] with WeightedGraphLike[T, WeightedDirectedEdge[_ <: T]] {
     override type Self[U] = WeightedDirectedGraph[U]
     override type Edge[U] = WeightedDirectedEdge[U]
 
-    override def create[U <: T](newVertices: Set[Vertex[_ <: T]], newEdges: Set[Edge[T]]): Self[U] = {
+    override implicit val edgesEncoder: JsonEncoder[Set[Edge[_ <: T]]] = JsonEncoder[Set[EdgeLike[T]]].contramap(_.asInstanceOf[Set[EdgeLike[T]]])
+    override implicit val selfEncoder: JsonEncoder[Self[T]] = EncoderWithType(this.getClass.getSimpleName)(DeriveJsonEncoder.gen[Self[T]])
+    override implicit val edgesDecoder: JsonDecoder[Set[Edge[_ <: T]]] = JsonDecoder[Set[EdgeLike[T]]].map(_.asInstanceOf[Set[Edge[_ <: T]]])
+    override implicit val selfDecoder: JsonDecoder[Self[T]] = DecoderWithType(this.getClass.getSimpleName)(DeriveJsonDecoder.gen[Self[T]])
+
+    override def create[U <: T](newVertices: Set[Vertex[_ <: T]], newEdges: Set[Edge[_ <: T]]): Self[U] = {
         new Self[T](vertices = newVertices, edges = newEdges).asInstanceOf[Self[U]]
     }
 
-    override def deserialize[U <: T](s: String): Self[U] = {
-        WeightedDirectedGraph[U]()
+    override def deserializeJSON(s: String): Self[T] = {
+        s.fromJson[Self[T]].getOrElse(throw new Exception("Failed to deserialize Graph"))
+    }
+
+    override def serializeJSON: String = {
+        this.toJson
     }
 
     def isSheduling: Boolean = {
@@ -282,7 +336,7 @@ case class WeightedDirectedGraph[T](override val vertices: Set[Vertex[_ <: T]], 
 }
 
 object WeightedDirectedGraph {
-    def apply[T](vertices: Set[Vertex[_ <: T]], edges: Set[WeightedDirectedEdge[T]]): WeightedDirectedGraph[T] = {
+    def apply[T](vertices: Set[Vertex[_ <: T]], edges: Set[WeightedDirectedEdge[_ <: T]]): WeightedDirectedGraph[T] = {
         new WeightedDirectedGraph[T](vertices, edges)
     }
 
@@ -291,27 +345,52 @@ object WeightedDirectedGraph {
     }
 }
 
+extension [T](g: WeightedDirectedGraph[T]) {
+    def serializeGraphViz: String = {
+        val verticesStr = g.vertices.map((v) => s"${v.id} [data=${v.data.getOrElse("null")}];").mkString("\n")
+        val edgesStr = g.edges.map((e) => s"${e.v1.id} -> ${e.v2.id} [weight=${e.weight.get}];").mkString("\n")
+        s"digraph G {\n$verticesStr\n$edgesStr\n}"
+    }
+}
 
 
-case class WeightedUndirectedGraph[T](override val vertices: Set[Vertex[_ <: T]], override val edges: Set[WeightedUndirectedEdge[T]]) extends UndirectedGraphLike[T, WeightedUndirectedEdge[T]] with WeightedGraphLike[T, WeightedUndirectedEdge[T]] {
+
+case class WeightedUndirectedGraph[T](override val vertices: Set[Vertex[_ <: T]], override val edges: Set[WeightedUndirectedEdge[_ <: T]]) extends UndirectedGraphLike[T, WeightedUndirectedEdge[_ <: T]] with WeightedGraphLike[T, WeightedUndirectedEdge[_ <: T]] {
     override type Self[U] = WeightedUndirectedGraph[U]
     override type Edge[U] = WeightedUndirectedEdge[U]
     
-    override def create[U <: T](newVertices: Set[Vertex[_ <: T]], newEdges: Set[Edge[T]]): Self[U] = {
+    override implicit val edgesEncoder: JsonEncoder[Set[Edge[_ <: T]]] = JsonEncoder[Set[EdgeLike[T]]].contramap(_.asInstanceOf[Set[EdgeLike[T]]])
+    override implicit val selfEncoder: JsonEncoder[Self[T]] = EncoderWithType(this.getClass.getSimpleName)(DeriveJsonEncoder.gen[Self[T]])
+    override implicit val edgesDecoder: JsonDecoder[Set[Edge[_ <: T]]] = JsonDecoder[Set[EdgeLike[T]]].map(_.asInstanceOf[Set[Edge[_ <: T]]])
+    override implicit val selfDecoder: JsonDecoder[Self[T]] = DecoderWithType(this.getClass.getSimpleName)(DeriveJsonDecoder.gen[Self[T]])
+
+    override def create[U <: T](newVertices: Set[Vertex[_ <: T]], newEdges: Set[Edge[_ <: T]]): Self[U] = {
         new Self[T](vertices = newVertices, edges = newEdges).asInstanceOf[Self[U]]
     }
 
-    override def deserialize[U <: T](s: String): Self[U] = {
-        WeightedUndirectedGraph[U]()
+    override def deserializeJSON(s: String): Self[T] = {
+        s.fromJson[Self[T]].getOrElse(throw new Exception("Failed to deserialize Graph"))
+    }
+
+    override def serializeJSON: String = {
+        this.toJson
     }
 }
 
 object WeightedUndirectedGraph {
-    def apply[T](vertices: Set[Vertex[_ <: T]], edges: Set[WeightedUndirectedEdge[T]]): WeightedUndirectedGraph[T] = {
+    def apply[T](vertices: Set[Vertex[_ <: T]], edges: Set[WeightedUndirectedEdge[_ <: T]]): WeightedUndirectedGraph[T] = {
         new WeightedUndirectedGraph[T](vertices, edges)
     }
 
     def apply[T](): WeightedUndirectedGraph[T] = {
         new WeightedUndirectedGraph[T](Set(), Set())
+    }
+}
+
+extension [T](g: WeightedUndirectedGraph[T]) {
+    def serializeGraphViz: String = {
+        val verticesStr = g.vertices.map((v) => s"${v.id} [data=${v.data.getOrElse("null")}];").mkString("\n")
+        val edgesStr = g.edges.map((e) => s"${e.v1.id} -- ${e.v2.id} [weight=${e.weight.get}];").mkString("\n")
+        s"graph G {\n$verticesStr\n$edgesStr\n}"
     }
 }

@@ -1,5 +1,7 @@
 package com.scala.core
 
+import zio.json._
+
 sealed trait EdgeLike[+T] {
     val v1: Vertex[T]
     val v2: Vertex[T]
@@ -23,6 +25,20 @@ sealed trait EdgeLike[+T] {
         }
         result * prime + weight.hashCode()
     }
+
+    def serializeJSON: String = this.toJson
+}
+
+object EdgeLike {
+    implicit def directionEncoder: JsonEncoder[DirectedDirection] = JsonEncoder[String].contramap(_.toString)
+    implicit def someIntEncoder: JsonEncoder[Some[Int]] = JsonEncoder[Int].contramap(_.get)
+    implicit def encoder[T]: JsonEncoder[EdgeLike[T]] = DeriveJsonEncoder.gen[EdgeLike[T]]
+
+    implicit def directionDecoder: JsonDecoder[DirectedDirection] = JsonDecoder[String].map {
+        Direction.valueOf(_).ensuring(d => d == Direction.Forward || d == Direction.Backward).asInstanceOf[DirectedDirection]
+    }
+    implicit def someIntDecoder: JsonDecoder[Some[Int]] = JsonDecoder[Int].map(Some(_))
+    implicit def decoder[T]: JsonDecoder[EdgeLike[T]] = DeriveJsonDecoder.gen[EdgeLike[T]]
 }
 
 sealed trait DirectedEdgeLike[+T] extends EdgeLike[T] {
