@@ -80,7 +80,9 @@ lazy val core = (project in file("core")).settings(
   organization := "com.scala",
   version := "0.1.0",
   scalaVersion := "3.3.3",
-  libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.19" % "test"
+  libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.19" % "test",
+  libraryDependencies += "dev.zio" %% "zio" % "2.1.5",
+  libraryDependencies += "dev.zio" %% "zio-json" % "0.7.1"
 )
 lazy val ui = (project in file("ui")).settings(
   name := "ui",
