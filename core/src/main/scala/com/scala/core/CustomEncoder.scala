@@ -1,7 +1,6 @@
 package com.scala.core
 
 import zio.json._
-import zio.json.ast.Json
 import zio.json.internal.{RetractReader, Write}
 
 def EncoderWithType[T](typeName: String)(implicit encoder: JsonEncoder[T]): JsonEncoder[T] = new JsonEncoder[T] {
