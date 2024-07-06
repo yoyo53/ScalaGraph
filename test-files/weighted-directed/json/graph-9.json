@@ -1,0 +1,284 @@
+{
+  "WeightedDirectedGraph" : {
+    "vertices" : [
+      {
+        "id" : 6,
+        "data" : null
+      },
+      {
+        "id" : 8,
+        "data" : null
+      },
+      {
+        "id" : 11,
+        "data" : null
+      },
+      {
+        "id" : 1,
+        "data" : null
+      },
+      {
+        "id" : 4,
+        "data" : null
+      },
+      {
+        "id" : 7,
+        "data" : null
+      },
+      {
+        "id" : 0,
+        "data" : null
+      },
+      {
+        "id" : 5,
+        "data" : null
+      },
+      {
+        "id" : 3,
+        "data" : null
+      },
+      {
+        "id" : 2,
+        "data" : null
+      },
+      {
+        "id" : 9,
+        "data" : null
+      },
+      {
+        "id" : 10,
+        "data" : null
+      }
+    ],
+    "edges" : [
+      {
+        "v1" : {
+          "id" : 8,
+          "data" : null
+        },
+        "v2" : {
+          "id" : 9,
+          "data" : null
+        },
+        "direction" : "Forward",
+        "weight" : 9
+      },
+      {
+        "v1" : {
+          "id" : 4,
+          "data" : null
+        },
+        "v2" : {
+          "id" : 1,
+          "data" : null
+        },
+        "direction" : "Forward",
+        "weight" : 1
+      },
+      {
+        "v1" : {
+          "id" : 10,
+          "data" : null
+        },
+        "v2" : {
+          "id" : 1,
+          "data" : null
+        },
+        "direction" : "Forward",
+        "weight" : 1
+      },
+      {
+        "v1" : {
+          "id" : 7,
+          "data" : null
+        },
+        "v2" : {
+          "id" : 8,
+          "data" : null
+        },
+        "direction" : "Forward",
+        "weight" : 8
+      },
+      {
+        "v1" : {
+          "id" : 4,
+          "data" : null
+        },
+        "v2" : {
+          "id" : 5,
+          "data" : null
+        },
+        "direction" : "Forward",
+        "weight" : 5
+      },
+      {
+        "v1" : {
+          "id" : 1,
+          "data" : null
+        },
+        "v2" : {
+          "id" : 9,
+          "data" : null
+        },
+        "direction" : "Forward",
+        "weight" : 9
+      },
+      {
+        "v1" : {
+          "id" : 10,
+          "data" : null
+        },
+        "v2" : {
+          "id" : 3,
+          "data" : null
+        },
+        "direction" : "Forward",
+        "weight" : 3
+      },
+      {
+        "v1" : {
+          "id" : 3,
+          "data" : null
+        },
+        "v2" : {
+          "id" : 9,
+          "data" : null
+        },
+        "direction" : "Forward",
+        "weight" : 9
+      },
+      {
+        "v1" : {
+          "id" : 8,
+          "data" : null
+        },
+        "v2" : {
+          "id" : 1,
+          "data" : null
+        },
+        "direction" : "Forward",
+        "weight" : 1
+      },
+      {
+        "v1" : {
+          "id" : 0,
+          "data" : null
+        },
+        "v2" : {
+          "id" : 6,
+          "data" : null
+        },
+        "direction" : "Forward",
+        "weight" : 0
+      },
+      {
+        "v1" : {
+          "id" : 0,
+          "data" : null
+        },
+        "v2" : {
+          "id" : 7,
+          "data" : null
+        },
+        "direction" : "Forward",
+        "weight" : 0
+      },
+      {
+        "v1" : {
+          "id" : 7,
+          "data" : null
+        },
+        "v2" : {
+          "id" : 2,
+          "data" : null
+        },
+        "direction" : "Forward",
+        "weight" : 2
+      },
+      {
+        "v1" : {
+          "id" : 6,
+          "data" : null
+        },
+        "v2" : {
+          "id" : 3,
+          "data" : null
+        },
+        "direction" : "Forward",
+        "weight" : 3
+      },
+      {
+        "v1" : {
+          "id" : 0,
+          "data" : null
+        },
+        "v2" : {
+          "id" : 10,
+          "data" : null
+        },
+        "direction" : "Forward",
+        "weight" : 0
+      },
+      {
+        "v1" : {
+          "id" : 5,
+          "data" : null
+        },
+        "v2" : {
+          "id" : 8,
+          "data" : null
+        },
+        "direction" : "Forward",
+        "weight" : 8
+      },
+      {
+        "v1" : {
+          "id" : 2,
+          "data" : null
+        },
+        "v2" : {
+          "id" : 9,
+          "data" : null
+        },
+        "direction" : "Forward",
+        "weight" : 9
+      },
+      {
+        "v1" : {
+          "id" : 5,
+          "data" : null
+        },
+        "v2" : {
+          "id" : 1,
+          "data" : null
+        },
+        "direction" : "Forward",
+        "weight" : 1
+      },
+      {
+        "v1" : {
+          "id" : 0,
+          "data" : null
+        },
+        "v2" : {
+          "id" : 4,
+          "data" : null
+        },
+        "direction" : "Forward",
+        "weight" : 0
+      },
+      {
+        "v1" : {
+          "id" : 9,
+          "data" : null
+        },
+        "v2" : {
+          "id" : 11,
+          "data" : null
+        },
+        "direction" : "Forward",
+        "weight" : 0
+      }
+    ]
+  }
+}
