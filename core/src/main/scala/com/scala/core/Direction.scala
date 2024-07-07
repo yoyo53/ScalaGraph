@@ -20,8 +20,9 @@ object Direction {
     implicit def encoder: JsonEncoder[Direction] = DeriveJsonEncoder.gen[Direction]
     implicit def decoder: JsonDecoder[Direction] = DeriveJsonDecoder.gen[Direction]
     
-    implicit def directedEncoder: JsonEncoder[DirectedDirection] = JsonEncoder[Direction].contramap(_.asInstanceOf[Direction])
-    implicit def directedDecoder: JsonDecoder[DirectedDirection] = JsonDecoder[Direction].map {
-        d => d.ensuring(d == Direction.Forward || d == Direction.Backward).asInstanceOf[DirectedDirection]
-    }
+    implicit def directedEncoder: JsonEncoder[DirectedDirection] = JsonEncoder[Direction].contramap(d => d: Direction)
+    implicit def directedDecoder: JsonDecoder[DirectedDirection] = JsonDecoder[Direction].map({
+        case d: DirectedDirection => d
+        case _ => throw new Exception("Invalid direction")
+    })
 }

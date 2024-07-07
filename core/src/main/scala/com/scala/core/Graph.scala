@@ -31,11 +31,11 @@ sealed trait GraphLike[T, Edge <: EdgeLike[_ <: T]] {
     def getEdges: Set[E] = edges
 
     def addEdge[U <: T, F <: E](e: F): Self[U] = {
-        create(this.vertices + e.v1 + e.v2, this.edges + e.asInstanceOf[E])
+        create(this.vertices + e.v1 + e.v2, this.edges + e)
     }
 
     def removeEdge[U <: T, F <: E](e: F): Self[U] = {
-        create(this.vertices, this.edges - e.asInstanceOf[E])
+        create(this.vertices, this.edges - e)
     }
 
     override def toString(): String = {
