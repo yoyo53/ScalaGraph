@@ -26,18 +26,16 @@ new File(s"$folder2/json").listFiles.filter(_.isFile).map(_.getName).filter(_.en
 io.Source.fromFile("test-files/directed/json/graph-25.json")
     .mkString
     .fromJson[DirectedGraph[Int]]
-    .getOrElse(DirectedGraph[Int]())
+    .getOrElse(null)
     .toJson
     .fromJson[DirectedGraph[Int]]
-    .getOrElse(DirectedGraph[Int]())
+    .getOrElse(null)
     .toJsonPretty
     .fromJson[DirectedGraph[Int]]
-    .getOrElse(DirectedGraph[Int]())
+    .getOrElse(null)
     .toGraphViz
     .fromGraphViz[DirectedGraph[Int]]
-    .getOrElse(DirectedGraph[Int]())
+    .getOrElse(null)
     .toGraphVizPretty
     .fromGraphViz[DirectedGraph[Int]]
-    .getOrElse(DirectedGraph[Int]())
-    .toJson
-
+    .getOrElse(null)

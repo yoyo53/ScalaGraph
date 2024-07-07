@@ -58,8 +58,7 @@ extension [T](g: GraphLike[T, _ <: EdgeLike[_ <: T]]) {
     }
 }
 
-
-implicit class GraphVizDeserializer(graphViz: String) {
+extension (graphViz: String) {
     def fromGraphVizVertex[T]: Try[Vertex[T]] = { 
         val vertexRegex = "([0-9]+)(?:\\s*?\\[.*?\\])?\\s*?;?\\n?".r
         graphViz match {
@@ -82,8 +81,12 @@ implicit class GraphVizDeserializer(graphViz: String) {
         }
     }
 
-    def fromGraphViz[G <: GraphLike[_, _ <: EdgeLike[_]]: ClassTag](implicit extractor: VertexTypeExtractor[G]): Try[G] = {
-        val T = extractor.VertexType
+    def fromGraphViz[G <: GraphLike[_, _ <: EdgeLike[_]]: ClassTag]: Try[G] = {
+        def _extractVertexType[T](implicit ev: G <:< GraphLike[_ <: T, _ <: EdgeLike[_ <: T]], ct: ClassTag[T]): Class[T] = {
+            ct.runtimeClass.asInstanceOf[Class[T]]
+        }
+
+        val T = _extractVertexType
         val regex = "(graph|digraph)\\s*?\\{((?:\\n|.)*?)\\}\\s*?".r
         val matches = regex.findFirstMatchIn(graphViz).map(m => (m.group(1), m.group(2)))
         val graphType = matches.map(_._1).get
@@ -91,7 +94,7 @@ implicit class GraphVizDeserializer(graphViz: String) {
         content match {
             case None => Failure(new Exception("Invalid graph string"))
             case Some(value) => {       
-                val lines = value.split(";").map(_.strip).filter(_.nonEmpty)
+                val lines = value.split(";").map(_.strip).filter(_.nonEmpty).toList
                 
                 val verticesLines = lines.takeWhile(l => !l.contains("}") && !l.contains("->") && !l.contains("<-") && !l.contains("--"))
                 val vertices = Try(verticesLines.map(_.fromGraphVizVertex[T.type]).map(_.get))
@@ -100,48 +103,38 @@ implicit class GraphVizDeserializer(graphViz: String) {
                 val edges = Try(edgesLines.map(_.fromGraphVizEdge[T.type]).map(_.get))
 
                 if (vertices.isFailure) Failure(vertices.failed.get)
-                else if (edges.isFailure) Failure(edges.failed.get)
-                else {
-                    if (edges.get.isEmpty) {
-                        graphType match {
-                            case "digraph" => Success(DirectedGraph[T.type]().asInstanceOf[G])
-                            case "graph" => Success(UndirectedGraph[T.type]().asInstanceOf[G])
-                        }
+                else edges match {
+                    case Failure(exception) => Failure(exception)
+                    case Success(Nil) => graphType match {
+                        case "digraph" => Success(DirectedGraph[T.type]())
+                        case "graph" => Success(UndirectedGraph[T.type]())
+                        case _ => Failure(new Exception("Invalid graph type"))
                     }
-                    else {
-                        val weighted = edges.get.forall(_.isInstanceOf[WeightedEdgeLike[_]])                        
-                        val directed = edges.get.forall(_.isInstanceOf[DirectedEdgeLike[_]])
-                        
-                        if (!weighted && edges.get.exists(_.isInstanceOf[WeightedEdgeLike[_]])) Failure(new Exception("Invalid edge type"))
-                        else if (!directed && edges.get.exists(_.isInstanceOf[DirectedEdgeLike[_]])) Failure(new Exception("Invalid edge type"))
-                        else {
-                            val graph = (weighted, directed, graphType) match {
-                                case (true, true, "digraph") => WeightedDirectedGraph[T.type]()
-                                case (true, false, "graph") => WeightedUndirectedGraph[T.type]()
-                                case (false, true, "digraph") => DirectedGraph[T.type]()
-                                case (false, false, "graph") => UndirectedGraph[T.type]()
-                                case _ => throw new Exception("Invalid graph type")
-                            }
+                    case Success(value) => {
+                        val weighted = value.map(_.isInstanceOf[WeightedEdgeLike[_]])                        
+                        val directed = value.map(_.isInstanceOf[DirectedEdgeLike[_]])
 
-                            val verticesGraph = vertices.get.foldLeft(graph)((acc, v) => acc.addVertex(v).asInstanceOf[graph.type])
-                            val fullGraph = edges.get.foldLeft(verticesGraph)((acc, e) => acc.addEdge(e.asInstanceOf[acc.E]).asInstanceOf[graph.type])
-                
-                            fullGraph match {
-                                case g: G => Success(g.asInstanceOf[G])
-                                case _ => Failure(new Exception("Invalid graph type"))
-                            }
+                        if (weighted.exists(_ != weighted.head)) Failure(new Exception("Invalid edge type"))
+                        else if (directed.exists(_ != directed.head)) Failure(new Exception("Invalid edge type"))
+                        else (weighted.head, directed.head, graphType) match {
+                            case (true, true, "digraph") => Success(WeightedDirectedGraph[T.type]())
+                            case (true, false, "graph") => Success(WeightedUndirectedGraph[T.type]())
+                            case (false, true, "digraph") => Success(DirectedGraph[T.type]())
+                            case (false, false, "graph") => Success(UndirectedGraph[T.type]())
+                            case _ => Failure(new Exception("Invalid graph type"))
                         }
                     }
+                } match {
+                    case Success(graph: G) => {
+                        val verticesGraph = vertices.get.foldLeft(graph)((acc, v) => acc.addVertex(v.asInstanceOf[acc.V]).asInstanceOf[G])
+                        val fullGraph = edges.get.foldLeft(verticesGraph)((acc, e) => acc.addEdge(e.asInstanceOf[acc.E]).asInstanceOf[G])
+            
+                        Success(fullGraph)
+                    }
+                    case Failure(exception) => Failure(exception)
+                    case g => Failure(new Exception("Invalid graph type"))
                 }
             }
         }
-    }
-}
-
-implicit def extractVertexType[G](implicit ct: ClassTag[G]): VertexTypeExtractor[G] = new VertexTypeExtractor[G]
-
-class VertexTypeExtractor[G] {
-    def VertexType[T](implicit ct: ClassTag[G]): Class[T] = {
-        ct.runtimeClass.asInstanceOf[Class[T]]
     }
 }
