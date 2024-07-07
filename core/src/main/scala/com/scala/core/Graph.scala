@@ -11,7 +11,7 @@ sealed trait GraphLike[T, Edge <: EdgeLike[_ <: T]] {
     protected val vertices: Set[V]
     protected val edges: Set[E]
 
-    def create[U <: T, F >: E <: EdgeLike[_ <: T]](newVertices: Set[V], newEdges: Set[F]): Self[U]
+    def create[U <: T, F <: E](newVertices: Set[V], newEdges: Set[F]): Self[U]
 
 
     def copy[U <: T](newVertices: Set[V] = vertices, newEdges: Set[E] = edges): Self[U] = {
@@ -30,11 +30,11 @@ sealed trait GraphLike[T, Edge <: EdgeLike[_ <: T]] {
 
     def getEdges: Set[E] = edges
 
-    def addEdge[U <: T, F >: E <: EdgeLike[_ <: T]](e: F): Self[U] = {
+    def addEdge[U <: T, F <: E](e: F): Self[U] = {
         create(this.vertices + e.v1 + e.v2, this.edges + e.asInstanceOf[E])
     }
 
-    def removeEdge[U <: T, F >: E <: EdgeLike[_ <: T]](e: F): Self[U] = {
+    def removeEdge[U <: T, F <: E](e: F): Self[U] = {
         create(this.vertices, this.edges - e.asInstanceOf[E])
     }
 
@@ -406,7 +406,7 @@ sealed trait UnweightedGraphLike[T, Edge <: UnweightedEdgeLike[_ <: T]] extends 
 case class DirectedGraph[T](protected val vertices: Set[Vertex[_ <: T]], protected val edges: Set[DirectedEdge[_ <: T]]) extends DirectedGraphLike[T, DirectedEdge[_ <: T]] with UnweightedGraphLike[T, DirectedEdge[_ <: T]] {
     type Self[U] = DirectedGraph[U]
 
-    def create[U <: T, F >: E <: EdgeLike[_ <: T]](newVertices: Set[V], newEdges: Set[F]): Self[U] = {
+    def create[U <: T, F <: E](newVertices: Set[V], newEdges: Set[F]): Self[U] = {
         new Self[T](vertices = newVertices, edges = newEdges.asInstanceOf[Set[E]]).asInstanceOf[Self[U]]
     }
 }
@@ -429,7 +429,7 @@ object DirectedGraph {
 case class UndirectedGraph[T](protected val vertices: Set[Vertex[_ <: T]], protected val edges: Set[UndirectedEdge[_ <: T]]) extends UndirectedGraphLike[T, UndirectedEdge[_ <: T]] with UnweightedGraphLike[T, UndirectedEdge[_ <: T]] {
     type Self[U] = UndirectedGraph[U]
 
-    def create[U <: T, F >: E <: EdgeLike[_ <: T]](newVertices: Set[V], newEdges: Set[F]): Self[U] = {
+    def create[U <: T, F <: E](newVertices: Set[V], newEdges: Set[F]): Self[U] = {
         new Self[T](vertices = newVertices, edges = newEdges.asInstanceOf[Set[E]]).asInstanceOf[Self[U]]
     }
 }
@@ -452,7 +452,7 @@ object UndirectedGraph {
 case class WeightedDirectedGraph[T](protected val vertices: Set[Vertex[_ <: T]], protected val edges: Set[WeightedDirectedEdge[_ <: T]]) extends DirectedGraphLike[T, WeightedDirectedEdge[_ <: T]] with WeightedGraphLike[T, WeightedDirectedEdge[_ <: T]] {
     type Self[U] = WeightedDirectedGraph[U]
 
-    def create[U <: T, F >: E <: EdgeLike[_ <: T]](newVertices: Set[V], newEdges: Set[F]): Self[U] = {
+    def create[U <: T, F <: E](newVertices: Set[V], newEdges: Set[F]): Self[U] = {
         new Self[T](vertices = newVertices, edges = newEdges.asInstanceOf[Set[E]]).asInstanceOf[Self[U]]
     }
 
@@ -559,7 +559,7 @@ object WeightedDirectedGraph {
 case class WeightedUndirectedGraph[T](protected val vertices: Set[Vertex[_ <: T]], protected val edges: Set[WeightedUndirectedEdge[_ <: T]]) extends UndirectedGraphLike[T, WeightedUndirectedEdge[_ <: T]] with WeightedGraphLike[T, WeightedUndirectedEdge[_ <: T]] {
     type Self[U] = WeightedUndirectedGraph[U]
     
-    def create[U <: T, F >: E <: EdgeLike[_ <: T]](newVertices: Set[V], newEdges: Set[F]): Self[U] = {
+    def create[U <: T, F <: E](newVertices: Set[V], newEdges: Set[F]): Self[U] = {
         new Self[T](vertices = newVertices, edges = newEdges.asInstanceOf[Set[E]]).asInstanceOf[Self[U]]
     }
 }

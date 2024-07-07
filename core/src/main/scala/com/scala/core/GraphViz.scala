@@ -1,9 +1,10 @@
 package com.scala.core
 
 import scala.util.{Try, Success, Failure}
+import scala.reflect.ClassTag
 
 extension [T](vertex: Vertex[T]) {
-    def serializeGraphViz: String = {
+    def toGraphViz: String = {
         val data = vertex.data match {
             case Some(value) => s" [data=\"${value.toString}\"]"
             case None        => s""
@@ -13,20 +14,9 @@ extension [T](vertex: Vertex[T]) {
     }
 }
 
-extension (v: Vertex.type) {
-    def deserializeGraphViz[T](vertexStr: String): Try[Vertex[T]] = {
-        val vertexRegex = "([0-9]+)(?:\\s*?\\[.*?\\])?\\s*?;?\\n?".r
-        vertexStr match {
-            case vertexRegex(id) => Success(Vertex(id.toInt))
-            case other => Failure(new Exception("Invalid vertex string: " + other))
-        }
-    }
-}
-
-
 
 extension [T](edge: EdgeLike[T]) {
-    def serializeGraphViz: String = {
+    def toGraphViz: String = {
         val weight = edge.weight match {
             case Some(value) => s" [label=$value]"
             case None => ""
@@ -41,11 +31,47 @@ extension [T](edge: EdgeLike[T]) {
     }
 }
 
-extension (v: EdgeLike.type) {
-    def deserializeGraphViz[T](edgeStr: String): Try[EdgeLike[T]] = {
+
+extension [T](g: GraphLike[T, _ <: EdgeLike[_ <: T]]) {
+    def toGraphViz: String = {
+        val graph = g match {
+            case _: DirectedGraphLike[?, ?] => "digraph"
+            case _: UndirectedGraphLike[?, ?] => "graph"
+        }
+
+        val verticesStr = g.getVertices.foldLeft("")((acc, v) => acc + s"${v.toGraphViz};")
+        val edgesStr = g.getEdges.foldLeft("")((acc, e) => acc + s"${e.toGraphViz};")
+        
+        s"$graph {$verticesStr$edgesStr}"
+    }
+
+    def toGraphVizPretty: String = {
+        val graph = g match {
+            case _: DirectedGraphLike[?, ?] => "digraph"
+            case _: UndirectedGraphLike[?, ?] => "graph"
+        }
+
+        val verticesStr = g.getVertices.foldLeft("")((acc, v) => acc + s"    ${v.toGraphViz};\n")
+        val edgesStr = g.getEdges.foldLeft("")((acc, e) => acc + s"    ${e.toGraphViz};\n")
+        
+        s"$graph {\n$verticesStr$edgesStr}"
+    }
+}
+
+
+implicit class GraphVizDeserializer(graphViz: String) {
+    def fromGraphVizVertex[T]: Try[Vertex[T]] = { 
+        val vertexRegex = "([0-9]+)(?:\\s*?\\[.*?\\])?\\s*?;?\\n?".r
+        graphViz match {
+            case vertexRegex(id) => Success(Vertex(id.toInt))
+            case other => Failure(new Exception("Invalid vertex string: " + other))
+        }
+    }
+
+    def fromGraphVizEdge[T]: Try[EdgeLike[T]] = {
         val weightedRegex = "([0-9]+)\\s*?(->|--|<-)\\s*?([0-9]+)\\s*?\\[.*?label=([0-9]+).*?\\]\\s*?;?\\n?".r
         val unweightedRegex = "([0-9]+)\\s*?(->|--|<-)\\s*?([0-9]+)\\s*?;?\\n?".r
-        edgeStr match {
+        graphViz match {
             case weightedRegex(v1, "--", v2, weight) => Success(WeightedUndirectedEdge[T](Vertex(v1.toInt), Vertex(v2.toInt), weight.toInt))
             case weightedRegex(v1, "->", v2, weight) => Success(WeightedDirectedEdge[T](Vertex(v1.toInt), Vertex(v2.toInt), Direction.Forward, weight.toInt))
             case weightedRegex(v1, "<-", v2, weight) => Success(WeightedDirectedEdge[T](Vertex(v1.toInt), Vertex(v2.toInt), Direction.Backward, weight.toInt))
@@ -55,61 +81,67 @@ extension (v: EdgeLike.type) {
             case other => Failure(new Exception("Invalid edge string: " + other))
         }
     }
-}
 
+    def fromGraphViz[G <: GraphLike[_, _ <: EdgeLike[_]]: ClassTag](implicit extractor: VertexTypeExtractor[G]): Try[G] = {
+        val T = extractor.VertexType
+        val regex = "(graph|digraph)\\s*?\\{((?:\\n|.)*?)\\}\\s*?".r
+        val matches = regex.findFirstMatchIn(graphViz).map(m => (m.group(1), m.group(2)))
+        val graphType = matches.map(_._1).get
+        val content = matches.map(_._2)
+        content match {
+            case None => Failure(new Exception("Invalid graph string"))
+            case Some(value) => {       
+                val lines = value.split(";").map(_.strip).filter(_.nonEmpty)
+                
+                val verticesLines = lines.takeWhile(l => !l.contains("}") && !l.contains("->") && !l.contains("<-") && !l.contains("--"))
+                val vertices = Try(verticesLines.map(_.fromGraphVizVertex[T.type]).map(_.get))
+        
+                val edgesLines = lines.drop(verticesLines.length).takeWhile(!_.contains("}"))
+                val edges = Try(edgesLines.map(_.fromGraphVizEdge[T.type]).map(_.get))
 
+                if (vertices.isFailure) Failure(vertices.failed.get)
+                else if (edges.isFailure) Failure(edges.failed.get)
+                else {
+                    if (edges.get.isEmpty) {
+                        graphType match {
+                            case "digraph" => Success(DirectedGraph[T.type]().asInstanceOf[G])
+                            case "graph" => Success(UndirectedGraph[T.type]().asInstanceOf[G])
+                        }
+                    }
+                    else {
+                        val weighted = edges.get.forall(_.isInstanceOf[WeightedEdgeLike[_]])                        
+                        val directed = edges.get.forall(_.isInstanceOf[DirectedEdgeLike[_]])
+                        
+                        if (!weighted && edges.get.exists(_.isInstanceOf[WeightedEdgeLike[_]])) Failure(new Exception("Invalid edge type"))
+                        else if (!directed && edges.get.exists(_.isInstanceOf[DirectedEdgeLike[_]])) Failure(new Exception("Invalid edge type"))
+                        else {
+                            val graph = (weighted, directed, graphType) match {
+                                case (true, true, "digraph") => WeightedDirectedGraph[T.type]()
+                                case (true, false, "graph") => WeightedUndirectedGraph[T.type]()
+                                case (false, true, "digraph") => DirectedGraph[T.type]()
+                                case (false, false, "graph") => UndirectedGraph[T.type]()
+                                case _ => throw new Exception("Invalid graph type")
+                            }
 
-extension [T](g: GraphLike[T, _ <: EdgeLike[_ <: T]]) {
-    def serializeGraphViz: String = {
-        val graph = g match {
-            case _: DirectedGraphLike[?, ?] => "digraph"
-            case _: UndirectedGraphLike[?, ?] => "graph"
+                            val verticesGraph = vertices.get.foldLeft(graph)((acc, v) => acc.addVertex(v).asInstanceOf[graph.type])
+                            val fullGraph = edges.get.foldLeft(verticesGraph)((acc, e) => acc.addEdge(e.asInstanceOf[acc.E]).asInstanceOf[graph.type])
+                
+                            fullGraph match {
+                                case g: G => Success(g.asInstanceOf[G])
+                                case _ => Failure(new Exception("Invalid graph type"))
+                            }
+                        }
+                    }
+                }
+            }
         }
-
-        val verticesStr = g.getVertices.foldLeft("")((acc, v) => acc + s"${v.serializeGraphViz};\n")
-        val edgesStr = g.getEdges.foldLeft("")((acc, e) => acc + s"${e.serializeGraphViz};\n")
-        
-        s"$graph {\n$verticesStr$edgesStr}"
     }
 }
 
-extension (g: GraphLike.type) {
-    def deserializeGraphViz[T, G <: GraphLike[T, _ <: EdgeLike[_ <: T]]](graphViz: String)(implicit construct: () => G): G = {
-        val lines = graphViz.split("\n")
-        
-        val verticesLines = lines.tail.takeWhile(l => !l.contains("}") && !l.contains("->") && !l.contains("<-") && !l.contains("--"))
-        val vertices = verticesLines.map(Vertex.deserializeGraphViz[T](_).get)
+implicit def extractVertexType[G](implicit ct: ClassTag[G]): VertexTypeExtractor[G] = new VertexTypeExtractor[G]
 
-        val edgesLines = lines.tail.drop(verticesLines.length).takeWhile(!_.contains("}"))
-        val edges = edgesLines.map(EdgeLike.deserializeGraphViz[T](_).get)
-
-        val graph = vertices.foldLeft(construct())((acc, v) => acc.addVertex(v).asInstanceOf[G])
-        edges.foldLeft(graph)((acc, e) => acc.addEdge(e).asInstanceOf[G])
-    }
-}
-
-
-
-extension (g: DirectedGraph.type) {
-    def deserializeGraphViz[T](graphViz: String): DirectedGraph[T] = {
-        GraphLike.deserializeGraphViz(graphViz)(DirectedGraph[T])
-    }
-}
-
-extension (g: UndirectedGraph.type) {
-    def deserializeGraphViz[T](graphViz: String): UndirectedGraph[T] = {
-        GraphLike.deserializeGraphViz(graphViz)(UndirectedGraph[T])
-    }
-}
-
-extension (g: WeightedDirectedGraph.type) {
-    def deserializeGraphViz[T](graphViz: String): WeightedDirectedGraph[T] = {
-        GraphLike.deserializeGraphViz(graphViz)(WeightedDirectedGraph[T])
-    }
-}
-
-extension (g: WeightedUndirectedGraph.type) {
-    def deserializeGraphViz[T](graphViz: String): WeightedUndirectedGraph[T] = {
-        GraphLike.deserializeGraphViz(graphViz)(WeightedUndirectedGraph[T])
+class VertexTypeExtractor[G] {
+    def VertexType[T](implicit ct: ClassTag[G]): Class[T] = {
+        ct.runtimeClass.asInstanceOf[Class[T]]
     }
 }
