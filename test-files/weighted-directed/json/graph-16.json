@@ -2,131 +2,107 @@
   "WeightedDirectedGraph" : {
     "vertices" : [
       {
-        "id" : 6,
-        "data" : null
+        "id" : 6
       },
       {
-        "id" : 1,
-        "data" : null
+        "id" : 1
       },
       {
-        "id" : 4,
-        "data" : null
+        "id" : 4
       },
       {
-        "id" : 7,
-        "data" : null
+        "id" : 7
       },
       {
-        "id" : 0,
-        "data" : null
+        "id" : 0
       },
       {
-        "id" : 5,
-        "data" : null
+        "id" : 5
       },
       {
-        "id" : 3,
-        "data" : null
+        "id" : 3
       },
       {
-        "id" : 2,
-        "data" : null
+        "id" : 2
       }
     ],
     "edges" : [
       {
         "v1" : {
-          "id" : 6,
-          "data" : null
+          "id" : 6
         },
         "v2" : {
-          "id" : 7,
-          "data" : null
+          "id" : 7
         },
         "direction" : "Forward",
         "weight" : 0
       },
       {
         "v1" : {
-          "id" : 5,
-          "data" : null
+          "id" : 5
         },
         "v2" : {
-          "id" : 1,
-          "data" : null
+          "id" : 1
         },
         "direction" : "Forward",
         "weight" : 1
       },
       {
         "v1" : {
-          "id" : 2,
-          "data" : null
+          "id" : 2
         },
         "v2" : {
-          "id" : 4,
-          "data" : null
+          "id" : 4
         },
         "direction" : "Forward",
         "weight" : 1
       },
       {
         "v1" : {
-          "id" : 3,
-          "data" : null
+          "id" : 3
         },
         "v2" : {
-          "id" : 2,
-          "data" : null
+          "id" : 2
         },
         "direction" : "Forward",
         "weight" : 1
       },
       {
         "v1" : {
-          "id" : 0,
-          "data" : null
+          "id" : 0
         },
         "v2" : {
-          "id" : 5,
-          "data" : null
+          "id" : 5
         },
         "direction" : "Forward",
         "weight" : 0
       },
       {
         "v1" : {
-          "id" : 0,
-          "data" : null
+          "id" : 0
         },
         "v2" : {
-          "id" : 6,
-          "data" : null
+          "id" : 6
         },
         "direction" : "Forward",
         "weight" : 0
       },
       {
         "v1" : {
-          "id" : 1,
-          "data" : null
+          "id" : 1
         },
         "v2" : {
-          "id" : 3,
-          "data" : null
+          "id" : 3
         },
         "direction" : "Forward",
         "weight" : 1
       },
       {
         "v1" : {
-          "id" : 4,
-          "data" : null
+          "id" : 4
         },
         "v2" : {
-          "id" : 1,
-          "data" : null
+          "id" : 1
         },
         "direction" : "Forward",
         "weight" : 1

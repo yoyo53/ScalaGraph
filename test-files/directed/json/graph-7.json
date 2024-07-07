@@ -2,34 +2,28 @@
   "DirectedGraph" : {
     "vertices" : [
       {
-        "id" : 1,
-        "data" : null
+        "id" : 1
       },
       {
-        "id" : 0,
-        "data" : null
+        "id" : 0
       }
     ],
     "edges" : [
       {
         "v1" : {
-          "id" : 1,
-          "data" : null
+          "id" : 1
         },
         "v2" : {
-          "id" : 1,
-          "data" : null
+          "id" : 1
         },
         "direction" : "Forward"
       },
       {
         "v1" : {
-          "id" : 1,
-          "data" : null
+          "id" : 1
         },
         "v2" : {
-          "id" : 0,
-          "data" : null
+          "id" : 0
         },
         "direction" : "Forward"
       }
