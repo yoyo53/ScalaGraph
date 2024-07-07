@@ -2,30 +2,28 @@ import com.scala.core._
 
 import zio.json._
 
-object Main extends App {
-  var graph = DirectedGraph[Int]()
-  
-  graph = graph.addVertex(Vertex(1))
-  graph = graph.addVertex(Vertex(2))
-  graph = graph.addVertex(Vertex(3))
-  graph = graph.addVertex(Vertex(4))
-  graph = graph.addVertex(Vertex(5))
-  graph = graph.addVertex(Vertex(6))
-  graph = graph.addVertex(Vertex(7))
-  graph = graph.addVertex(Vertex(8))
-  graph = graph.addVertex(Vertex(9, 12))
-  graph = graph.addEdge(DirectedEdge(Vertex(1), Vertex(2), Direction.Forward))
-  graph = graph.addEdge(DirectedEdge(Vertex(1), Vertex(3), Direction.Forward))
-  graph = graph.addEdge(DirectedEdge(Vertex(3), Vertex(4), Direction.Forward))
-  graph = graph.addEdge(DirectedEdge(Vertex(2), Vertex(5), Direction.Forward))
-  graph = graph.addEdge(DirectedEdge(Vertex(6), Vertex(7), Direction.Forward))
-  graph = graph.addEdge(DirectedEdge(Vertex(7), Vertex(8), Direction.Forward))
-  graph = graph.addEdge(DirectedEdge(Vertex(8), Vertex(3), Direction.Forward))
+object Main extends App {  
+  val graph = DirectedGraph[Int]().addVertex(Vertex(1))
+    .addVertex(Vertex(2))
+    .addVertex(Vertex(3))
+    .addVertex(Vertex(4))
+    .addVertex(Vertex(5))
+    .addVertex(Vertex(6))
+    .addVertex(Vertex(7))
+    .addVertex(Vertex(8))
+    .addVertex(Vertex(9, 12))
+    .addEdge(DirectedEdge(Vertex(1), Vertex(2), Direction.Forward))
+    .addEdge(DirectedEdge(Vertex(1), Vertex(3), Direction.Forward))
+    .addEdge(DirectedEdge(Vertex(3), Vertex(4), Direction.Forward))
+    .addEdge(DirectedEdge(Vertex(2), Vertex(5), Direction.Forward))
+    .addEdge(DirectedEdge(Vertex(6), Vertex(7), Direction.Forward))
+    .addEdge(DirectedEdge(Vertex(7), Vertex(8), Direction.Forward))
+    .addEdge(DirectedEdge(Vertex(8), Vertex(3), Direction.Forward))
   
   println("Graph: " + graph)
   println()
 
-  println("Graph Viz:\n" + graph.serializeGraphViz)
+  println("Graph Viz:\n" + graph.toGraphViz)
   println()
 
   val graphstr = graph.toJson
@@ -37,7 +35,7 @@ object Main extends App {
   println("Graph 2:\n" + graph2)
   println()
 
-  val graph3 = DirectedGraph.deserializeGraphViz[Int](graph.serializeGraphViz)
+  val graph3 = graph.toGraphViz.fromGraphViz[DirectedGraph[Int]].getOrElse(DirectedGraph[Int]())
   println("Graph 3:\n" + graph3.toJson)
   println()
 

@@ -10,7 +10,7 @@ new File(s"$folder/json").listFiles.filter(_.isFile).map(_.getName).filter(_.end
     val graph = lines.fromJson[DirectedGraph[Int]].getOrElse(DirectedGraph[Int]())
 
     println("Json: " + (graph.toJson.fromJson[DirectedGraph[Int]].getOrElse(DirectedGraph[Int]()) == graph))
-    println("GraphViz: " + (graph.serializeGraphViz == DirectedGraph.deserializeGraphViz[Int](graph.serializeGraphViz).serializeGraphViz))
+    println("GraphViz: " + (graph.toGraphViz.fromGraphViz[DirectedGraph[Int]].getOrElse(DirectedGraph[Int]()) == graph))
 })
 
 val folder2 = "test-files/weighted-directed"
@@ -20,5 +20,24 @@ new File(s"$folder2/json").listFiles.filter(_.isFile).map(_.getName).filter(_.en
     val graph = lines.fromJson[WeightedDirectedGraph[Int]].getOrElse(WeightedDirectedGraph[Int]())
 
     println("Json: " + (graph.toJson.fromJson[WeightedDirectedGraph[Int]].getOrElse(WeightedDirectedGraph[Int]()) == graph))
-    println("GraphViz: " + (graph.serializeGraphViz == WeightedDirectedGraph.deserializeGraphViz[Int](graph.serializeGraphViz).serializeGraphViz))
+    println("GraphViz: " + (graph.toGraphViz.fromGraphViz[DirectedGraph[Int]].getOrElse(DirectedGraph[Int]()) == graph))
 })
+
+io.Source.fromFile("test-files/directed/json/graph-25.json")
+    .mkString
+    .fromJson[DirectedGraph[Int]]
+    .getOrElse(DirectedGraph[Int]())
+    .toJson
+    .fromJson[DirectedGraph[Int]]
+    .getOrElse(DirectedGraph[Int]())
+    .toJsonPretty
+    .fromJson[DirectedGraph[Int]]
+    .getOrElse(DirectedGraph[Int]())
+    .toGraphViz
+    .fromGraphViz[DirectedGraph[Int]]
+    .getOrElse(DirectedGraph[Int]())
+    .toGraphVizPretty
+    .fromGraphViz[DirectedGraph[Int]]
+    .getOrElse(DirectedGraph[Int]())
+    .toJson
+
