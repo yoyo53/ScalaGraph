@@ -148,10 +148,14 @@ sealed trait GraphLike[T, Edge <: EdgeLike[_ <: T]] {
 
     def hasCycle: Boolean
 
-    def getShortestPathsFloydWarshall: Try[Map[(V, V), List[V]]] = {
+    def getShortestPathsFloydWarshall: Try[Map[(V, V), List[E]]] = {
         @annotation.tailrec
-        def _getPaths(paths: Map[(V, V), Option[V]], source: V, dest: V, current: V, result: List[V]): List[V] = {
-            paths((source, current)) match {
+        def _getPaths(paths: Map[(V, V), Option[E]], source: V, dest: V, current: E, result: List[E]): List[E] = {
+            val target = result match {
+                case Nil => if (current.v1 == dest) current.v2 else current.v1
+                case _ => if (current.v1 == result.head.v1) current.v2 else current.v1
+            }
+            paths((source, target)) match {
             case Some(next) if next != current => _getPaths(paths, source, dest, next, current :: result)
             case _ => current :: result
             }
@@ -176,7 +180,7 @@ sealed trait GraphLike[T, Edge <: EdgeLike[_ <: T]] {
                 if (source == target) {
                     (source, target) -> None
                 } else {
-                    (source, target) -> successors.find((e) => e.v1 == target || e.v2 == target).map(_ => source)
+                    (source, target) -> successors.filter((e) => e.v1 == target || e.v2 == target).minByOption(_.weight.getOrElse(1))
                 }
             })
         }).toMap
@@ -206,17 +210,16 @@ sealed trait GraphLike[T, Edge <: EdgeLike[_ <: T]] {
 
         if (vertices.exists((v) => finalDistances((v, v)) < 0)) return Failure(new Exception("Graph has negative cycles"))
         else {
-            val fullPaths = verticesList.flatMap(source => {
-                verticesList.map(dest => {
-                    (source, dest) -> _getPaths(finalPaths, source, dest, dest, List.empty)
+            val fullPaths = finalPaths.map((key, value) => value match {
+                case None => key -> List.empty
+                case Some(e) => key -> _getPaths(finalPaths, key._1, key._2, e, List.empty)
                 })
-            }).toMap
     
-            Success(fullPaths)
+            Success(fullPaths.filter((key, value) => value.nonEmpty))
         }
     }
 
-    def getShortestPathFloydWarshall(source: V, dest: V): Try[List[V]] = {
+    def getShortestPathFloydWarshall(source: V, dest: V): Try[List[E]] = {
         getShortestPathsFloydWarshall.map(_(source, dest))
     }
 
