@@ -89,10 +89,9 @@ lazy val ui = (project in file("ui")).settings(
   organization := "com.scala",
   version := "0.1.0",
   scalaVersion := "3.3.3",
-  libraryDependencies ++=Seq(
-    "dev.zio" %% "zio" % "2.1.5"
-    )
-)
+  libraryDependencies += "dev.zio" %% "zio" % "2.1.5",
+  libraryDependencies += "dev.zio" %% "zio-http" % "3.0.0-RC7"
+).dependsOn(core)
 
 // To learn more about multi-project builds, head over to the official sbt
 // documentation at http://www.scala-sbt.org/documentation.html
