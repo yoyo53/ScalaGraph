@@ -1,0 +1,20 @@
+{
+  "DirectedGraph" : {
+    "vertices" : [
+      {
+        "id" : 0
+      }
+    ],
+    "edges" : [
+      {
+        "v1" : {
+          "id" : 0
+        },
+        "v2" : {
+          "id" : 0
+        },
+        "direction" : "Forward"
+      }
+    ]
+  }
+}
