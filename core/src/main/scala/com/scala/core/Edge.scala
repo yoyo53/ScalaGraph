@@ -3,8 +3,8 @@ package com.scala.core
 import zio.json._
 
 sealed trait EdgeLike[+T] {
-    val v1: Vertex[_ <: T]
-    val v2: Vertex[_ <: T]
+    val v1: Vertex[T]
+    val v2: Vertex[T]
     val direction: Direction
     val weight: Option[Int]
 
