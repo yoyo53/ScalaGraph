@@ -11,7 +11,7 @@ class VertexSpec extends UnitSpec {
 
     val vertexWithData = Vertex(2, "testData")
     vertexWithData.id should be(2)
-    vertexWithData.data should be(Some("testData"))
+    vertexWithData.data.value should be("testData")
   }
 
 
@@ -61,8 +61,8 @@ class VertexSpec extends UnitSpec {
     val vertex = Vertex(1, "data")
     val vertex2 = Vertex(1, 1)
 
-    vertex.data.get shouldBe a [String]
-    vertex2.data.get shouldBe a [Int]
+    vertex.data.value shouldBe a [String]
+    vertex2.data.value shouldBe a [Int]
   }
 
   it should "be equal to another vertex with the data type explicitly specified" in {
