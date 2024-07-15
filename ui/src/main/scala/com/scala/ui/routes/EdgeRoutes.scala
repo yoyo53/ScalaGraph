@@ -7,8 +7,8 @@ import zio.http._
 import zio.json._
 import scala.reflect.ClassTag
 
-object VertextRoutes {
-    def routes[T : JsonCodec, G <: GraphLike[T, _ <: EdgeLike[T]] : JsonCodec : ClassTag] = Routes(
+object EdgeRoutes {
+      def routes[T: JsonCodec, E <: EdgeLike[T] : JsonCodec, G <: GraphLike[T, E] : JsonCodec : ClassTag] = Routes(
         Method.PUT / Root -> handler((req: Request) => {
             for {
                 body <- req.body.asString
@@ -16,9 +16,9 @@ object VertextRoutes {
                 state <- service.getState[G]
                 response <- state match {
                     case None => ZIO.succeed(Response.status(Status.MethodNotAllowed))
-                    case Some(graph) => body.fromJson[graph.V] match {
+                    case Some(graph) => body.fromJson[E] match {
                         case Left(value) => ZIO.succeed(Response.status(Status.BadRequest))
-                        case Right(vertex) => graph.addVertex(vertex) match {
+                        case Right(edge) => graph.addEdge(edge) match {
                             case gr: G => for {
                                 _ <- service.setState(gr)
                                 s <- service.getState[G]
@@ -40,9 +40,9 @@ object VertextRoutes {
                 state <- service.getState[G]
                 response <- state match {
                     case None => ZIO.succeed(Response.status(Status.MethodNotAllowed))
-                    case Some(graph) => body.fromJson[graph.V] match {
+                    case Some(graph) => body.fromJson[E] match {
                         case Left(value) => ZIO.succeed(Response.status(Status.BadRequest))
-                        case Right(vertex) => graph.removeVertex(vertex) match {
+                        case Right(edge) => graph.removeEdge(edge) match {
                             case gr: G => for {
                                 _ <- service.setState(gr)
                                 s <- service.getState[G]
@@ -63,7 +63,7 @@ object VertextRoutes {
                 state <- service.getState[G]
                 response <- state match {
                     case None => ZIO.succeed(Response.status(Status.MethodNotAllowed))
-                    case Some(g) => ZIO.succeed(Response.json(g.getVertices.toJson))
+                    case Some(g) => ZIO.succeed(Response.json(g.getEdges.toJson))
                 }
             } yield response
         }).sandbox,
