@@ -5,13 +5,14 @@ import com.scala.core._
 import zio._
 import zio.http._
 import zio.json._
+import scala.reflect.ClassTag
 
 object GraphRoutes {
-    val routes = Routes(
+    def routes[T : JsonCodec, G <: GraphLike[T, _ <: EdgeLike[T]] : JsonCodec : ClassTag](implicit constructor : () => G) = Routes(
         Method.GET / Root -> handler((req: Request) => {
             for {
                 service <- ZIO.service[StateService]
-                state <- service.getState[DirectedGraph[Int]]
+                state <- service.getState[G]
                 response <- state match {
                     case None => ZIO.succeed(Response.status(Status.MethodNotAllowed))
                     case Some(g) => ZIO.succeed(Response.json(g.toJson))
@@ -21,8 +22,8 @@ object GraphRoutes {
         Method.POST / Root -> handler((req: Request) => {
             for {
                 service <- ZIO.service[StateService]
-                _ <- service.setState(DirectedGraph[Int]())
-                state <- service.getState[DirectedGraph[Int]]
+                _ <- service.setState(constructor())
+                state <- service.getState[G]
                 response <- state match {
                     case None => ZIO.succeed(Response.status(Status.InternalServerError))
                     case Some(g) => ZIO.succeed(Response.json(g.toJson))

@@ -5,26 +5,30 @@ import com.scala.core._
 import zio._
 import zio.http._
 import zio.json._
+import scala.reflect.ClassTag
 
 object VertextRoutes {
-  val routes = Routes(
+    def routes[T : JsonCodec, G <: GraphLike[T, _ <: EdgeLike[T]] : JsonCodec : ClassTag] = Routes(
         Method.PUT / Root -> handler((req: Request) => {
             for {
                 body <- req.body.asString
                 service <- ZIO.service[StateService]
-                state <- service.getState[DirectedGraph[Int]]
+                state <- service.getState[G]
                 response <- state match {
                     case None => ZIO.succeed(Response.status(Status.MethodNotAllowed))
-                    case Some(graph) => body.fromJson[Vertex[Int]] match {
+                    case Some(graph) => body.fromJson[graph.V] match {
                         case Left(value) => ZIO.succeed(Response.status(Status.BadRequest))
-                        case Right(vertex) => for {
-                            _ <- service.setState(graph.addVertex(vertex))
-                            s <- service.getState[DirectedGraph[Int]]
-                            r <- s match {
-                                case None => ZIO.succeed(Response.status(Status.InternalServerError))
-                                case Some(g) => ZIO.succeed(Response.json(g.toJson))
-                            }
-                        } yield r
+                        case Right(vertex) => graph.addVertex(vertex) match {
+                            case gr: G => for {
+                                _ <- service.setState(gr)
+                                s <- service.getState[G]
+                                r <- s match {
+                                    case None => ZIO.succeed(Response.status(Status.InternalServerError))
+                                    case Some(g) => ZIO.succeed(Response.json(g.toJson))
+                                }
+                            } yield r
+                            case _ => ZIO.succeed(Response.status(Status.InternalServerError))
+                        } 
                     }
                 }
             } yield response
@@ -33,19 +37,22 @@ object VertextRoutes {
             for {
                 body <- req.body.asString
                 service <- ZIO.service[StateService]
-                state <- service.getState[DirectedGraph[Int]]
+                state <- service.getState[G]
                 response <- state match {
                     case None => ZIO.succeed(Response.status(Status.MethodNotAllowed))
-                    case Some(graph) => body.fromJson[Vertex[Int]] match {
+                    case Some(graph) => body.fromJson[graph.V] match {
                         case Left(value) => ZIO.succeed(Response.status(Status.BadRequest))
-                        case Right(vertex) => for {
-                            _ <- service.setState(graph.removeVertex(vertex))
-                            s <- service.getState[DirectedGraph[Int]]
-                            r <- s match {
-                                case None => ZIO.succeed(Response.status(Status.InternalServerError))
-                                case Some(g) => ZIO.succeed(Response.json(g.toJson))
-                            }
-                        } yield r
+                        case Right(vertex) => graph.removeVertex(vertex) match {
+                            case gr: G => for {
+                                _ <- service.setState(gr)
+                                s <- service.getState[G]
+                                r <- s match {
+                                    case None => ZIO.succeed(Response.status(Status.InternalServerError))
+                                    case Some(g) => ZIO.succeed(Response.json(g.toJson))
+                                }
+                            } yield r
+                            case _ => ZIO.succeed(Response.status(Status.InternalServerError))
+                        }
                     }
                 }
             } yield response
@@ -53,7 +60,7 @@ object VertextRoutes {
         Method.GET / Root -> handler((req: Request) => {
             for {
                 service <- ZIO.service[StateService]
-                state <- service.getState[DirectedGraph[Int]]
+                state <- service.getState[G]
                 response <- state match {
                     case None => ZIO.succeed(Response.status(Status.MethodNotAllowed))
                     case Some(g) => ZIO.succeed(Response.json(g.getVertices.toJson))
