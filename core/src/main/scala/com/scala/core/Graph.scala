@@ -11,12 +11,7 @@ sealed trait GraphLike[T, Edge <: EdgeLike[T]] {
     protected val vertices: Set[V]
     protected val edges: Set[E]
 
-    def create[F <: E](newVertices: Set[V], newEdges: Set[F]): Self[T]
-
-
-    def copy[F <: E](newVertices: Set[V] = vertices, newEdges: Set[F] = edges): Self[T] = {
-        create(newVertices, newEdges)
-    }
+    def create(newVertices: Set[V], newEdges: Set[E]): Self[T]
 
     def getVertices: Set[V] = vertices
 
@@ -30,11 +25,11 @@ sealed trait GraphLike[T, Edge <: EdgeLike[T]] {
 
     def getEdges: Set[E] = edges
 
-    def addEdge[F <: E](e: F): Self[T] = {
+    def addEdge(e: E): Self[T] = {
         create(this.vertices + e.v1 + e.v2, this.edges + e)
     }
 
-    def removeEdge[F <: E](e: F): Self[T] = {
+    def removeEdge(e: E): Self[T] = {
         create(this.vertices, this.edges - e)
     }
 
@@ -208,7 +203,7 @@ sealed trait GraphLike[T, Edge <: EdgeLike[T]] {
             }
         }
 
-        if (vertices.exists((v) => finalDistances((v, v)) < 0)) return Failure(new Exception("Graph has negative cycles"))
+        if (vertices.exists((v) => finalDistances((v, v)) < 0)) return Failure(new NegativeCycleException("Graph has negative cycle"))
         else {
             val fullPaths = finalPaths.map((key, value) => value match {
                 case None => key -> List.empty
@@ -239,7 +234,7 @@ sealed trait GraphLike[T, Edge <: EdgeLike[T]] {
             }
         }
 
-        if (edges.exists(_.weight.getOrElse(0) < 0)) Failure(new Exception("Graph has negative edges"))
+        if (edges.exists(_.weight.getOrElse(0) < 0)) Failure(new NegativeEdgeException("Graph has negative edge"))
         else {
             Success(_getShortestPathsDijkstra(List(source), List.empty, Map(source -> List.empty)))
         }
@@ -334,7 +329,7 @@ sealed trait DirectedGraphLike[T, Edge <: DirectedEdgeLike[T]] extends GraphLike
     }
 
     def getRank(v: V): Try[Int] = {
-        if (hasCycle) Failure(new Exception("Graph has cycle"))
+        if (hasCycle) Failure(new CycleException("Graph has cycle"))
         else {
             val predecessors = getPredecessors(v)
             if (predecessors.isEmpty) {
@@ -359,7 +354,7 @@ sealed trait DirectedGraphLike[T, Edge <: DirectedEdgeLike[T]] extends GraphLike
             }
         }
 
-        if (hasCycle) Failure(new Exception("Graph has cycle"))
+        if (hasCycle) Failure(new CycleException("Graph has cycle"))
         else {
             Success(_topologicalSort(getSources.toList, List.empty))
         }
@@ -406,16 +401,16 @@ sealed trait UnweightedGraphLike[T, Edge <: UnweightedEdgeLike[T]] extends Graph
 
 
 
-case class DirectedGraph[T](protected val vertices: Set[Vertex[T]], protected val edges: Set[DirectedEdge[_ <: T]]) extends DirectedGraphLike[T, DirectedEdge[_ <: T]] with UnweightedGraphLike[T, DirectedEdge[_ <: T]] {
+case class DirectedGraph[T](protected val vertices: Set[Vertex[T]], protected val edges: Set[DirectedEdge[T]]) extends DirectedGraphLike[T, DirectedEdge[T]] with UnweightedGraphLike[T, DirectedEdge[T]] {
     type Self[U] = DirectedGraph[U]
 
-    def create[F <: E](newVertices: Set[V], newEdges: Set[F]): Self[T] = {
-        new Self[T](vertices = newVertices, edges = newEdges.asInstanceOf[Set[E]])
+    def create(newVertices: Set[V], newEdges: Set[E]): Self[T] = {
+        new Self[T](vertices = newVertices, edges = newEdges)
     }
 }
 
 object DirectedGraph {
-    def apply[T](vertices: Set[Vertex[T]], edges: Set[DirectedEdge[_ <: T]]): DirectedGraph[T] = {
+    def apply[T](vertices: Set[Vertex[T]], edges: Set[DirectedEdge[T]]): DirectedGraph[T] = {
         new DirectedGraph[T](vertices, edges)
     }
 
@@ -429,16 +424,16 @@ object DirectedGraph {
 
 
 
-case class UndirectedGraph[T](protected val vertices: Set[Vertex[T]], protected val edges: Set[UndirectedEdge[_ <: T]]) extends UndirectedGraphLike[T, UndirectedEdge[_ <: T]] with UnweightedGraphLike[T, UndirectedEdge[_ <: T]] {
+case class UndirectedGraph[T](protected val vertices: Set[Vertex[T]], protected val edges: Set[UndirectedEdge[T]]) extends UndirectedGraphLike[T, UndirectedEdge[T]] with UnweightedGraphLike[T, UndirectedEdge[T]] {
     type Self[U] = UndirectedGraph[U]
 
-    def create[F <: E](newVertices: Set[V], newEdges: Set[F]): Self[T] = {
-        new Self[T](vertices = newVertices, edges = newEdges.asInstanceOf[Set[E]])
+    def create(newVertices: Set[V], newEdges: Set[E]): Self[T] = {
+        new Self[T](vertices = newVertices, edges = newEdges)
     }
 }
 
 object UndirectedGraph {
-    def apply[T](vertices: Set[Vertex[T]], edges: Set[UndirectedEdge[_ <: T]]): UndirectedGraph[T] = {
+    def apply[T](vertices: Set[Vertex[T]], edges: Set[UndirectedEdge[T]]): UndirectedGraph[T] = {
         new UndirectedGraph[T](vertices, edges)
     }
 
@@ -452,11 +447,11 @@ object UndirectedGraph {
 
 
 
-case class WeightedDirectedGraph[T](protected val vertices: Set[Vertex[T]], protected val edges: Set[WeightedDirectedEdge[_ <: T]]) extends DirectedGraphLike[T, WeightedDirectedEdge[_ <: T]] with WeightedGraphLike[T, WeightedDirectedEdge[_ <: T]] {
+case class WeightedDirectedGraph[T](protected val vertices: Set[Vertex[T]], protected val edges: Set[WeightedDirectedEdge[T]]) extends DirectedGraphLike[T, WeightedDirectedEdge[T]] with WeightedGraphLike[T, WeightedDirectedEdge[T]] {
     type Self[U] = WeightedDirectedGraph[U]
 
-    def create[F <: E](newVertices: Set[V], newEdges: Set[F]): Self[T] = {
-        new Self[T](vertices = newVertices, edges = newEdges.asInstanceOf[Set[E]])
+    def create(newVertices: Set[V], newEdges: Set[E]): Self[T] = {
+        new Self[T](vertices = newVertices, edges = newEdges)
     }
 
     def isSheduling: Boolean = {
@@ -469,7 +464,7 @@ case class WeightedDirectedGraph[T](protected val vertices: Set[Vertex[T]], prot
     }
 
     def getEarliestDate(v: V): Try[Int] = {
-        if (!isSheduling) Failure(new Exception("Graph is not a scheduling graph"))
+        if (!isSheduling) Failure(new NotSchedulingException("Graph is not a scheduling graph"))
         else {
             val predecessors = getPredecessorsEdges(v)
             if (predecessors.isEmpty) {
@@ -482,7 +477,7 @@ case class WeightedDirectedGraph[T](protected val vertices: Set[Vertex[T]], prot
     }
 
     def getLatestDate(v: V): Try[Int] = {
-        if (!isSheduling) Failure(new Exception("Graph is not a scheduling graph"))
+        if (!isSheduling) Failure(new NotSchedulingException("Graph is not a scheduling graph"))
         else {
             val successors = getSuccessorsEdges(v)
             if (successors.isEmpty) {
@@ -495,14 +490,14 @@ case class WeightedDirectedGraph[T](protected val vertices: Set[Vertex[T]], prot
     }
 
     def getTotalFloat(v: V): Try[Int] = {
-        if (!isSheduling) Failure(new Exception("Graph is not a scheduling graph"))
+        if (!isSheduling) Failure(new NotSchedulingException("Graph is not a scheduling graph"))
         else {
             Success(getLatestDate(v).get - getEarliestDate(v).get)
         }
     }
 
     def getFreeFloat(v: V): Try[Int] = {
-        if (!isSheduling) Failure(new Exception("Graph is not a scheduling graph"))
+        if (!isSheduling) Failure(new NotSchedulingException("Graph is not a scheduling graph"))
         else {
             val successors = getSuccessorsEdges(v)
             if (successors.isEmpty) {
@@ -537,7 +532,7 @@ case class WeightedDirectedGraph[T](protected val vertices: Set[Vertex[T]], prot
             }
         }
 
-        if (!isSheduling) Failure(new Exception("Graph is not a scheduling graph"))
+        if (!isSheduling) Failure(new NotSchedulingException("Graph is not a scheduling graph"))
         else {
             Success(_getCriticalPaths(getSources.flatMap(getSuccessorsEdges(_)).map(List(_))))
         }
@@ -545,7 +540,7 @@ case class WeightedDirectedGraph[T](protected val vertices: Set[Vertex[T]], prot
 }
 
 object WeightedDirectedGraph {
-    def apply[T](vertices: Set[Vertex[T]], edges: Set[WeightedDirectedEdge[_ <: T]]): WeightedDirectedGraph[T] = {
+    def apply[T](vertices: Set[Vertex[T]], edges: Set[WeightedDirectedEdge[T]]): WeightedDirectedGraph[T] = {
         new WeightedDirectedGraph[T](vertices, edges)
     }
 
@@ -559,16 +554,16 @@ object WeightedDirectedGraph {
 
 
 
-case class WeightedUndirectedGraph[T](protected val vertices: Set[Vertex[T]], protected val edges: Set[WeightedUndirectedEdge[_ <: T]]) extends UndirectedGraphLike[T, WeightedUndirectedEdge[_ <: T]] with WeightedGraphLike[T, WeightedUndirectedEdge[_ <: T]] {
+case class WeightedUndirectedGraph[T](protected val vertices: Set[Vertex[T]], protected val edges: Set[WeightedUndirectedEdge[T]]) extends UndirectedGraphLike[T, WeightedUndirectedEdge[T]] with WeightedGraphLike[T, WeightedUndirectedEdge[T]] {
     type Self[U] = WeightedUndirectedGraph[U]
     
-    def create[F <: E](newVertices: Set[V], newEdges: Set[F]): Self[T] = {
-        new Self[T](vertices = newVertices, edges = newEdges.asInstanceOf[Set[E]])
+    def create(newVertices: Set[V], newEdges: Set[E]): Self[T] = {
+        new Self[T](vertices = newVertices, edges = newEdges)
     }
 }
 
 object WeightedUndirectedGraph {
-    def apply[T](vertices: Set[Vertex[T]], edges: Set[WeightedUndirectedEdge[_ <: T]]): WeightedUndirectedGraph[T] = {
+    def apply[T](vertices: Set[Vertex[T]], edges: Set[WeightedUndirectedEdge[T]]): WeightedUndirectedGraph[T] = {
         new WeightedUndirectedGraph[T](vertices, edges)
     }
 
