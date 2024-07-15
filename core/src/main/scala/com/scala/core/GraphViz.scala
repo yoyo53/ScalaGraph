@@ -3,6 +3,22 @@ package com.scala.core
 import scala.util.{Try, Success, Failure}
 import scala.reflect.ClassTag
 
+
+class GraphVizException(message: String) extends GraphException(message)
+
+class GraphVizDecodingException(message: String) extends GraphVizException(message)
+
+class VertexDecodingException(message: String) extends GraphVizDecodingException(message)
+
+class EdgeDecodingException(message: String) extends GraphVizDecodingException(message)
+
+class InvalidEdgeTypeException(message: String) extends GraphVizDecodingException(message)
+
+class GraphDecodingException(message: String) extends GraphVizDecodingException(message)
+
+class InvalidGraphTypeException(message: String) extends GraphVizDecodingException(message)
+
+
 extension [T](vertex: Vertex[T]) {
     def toGraphViz: String = {
         val data = vertex.data match {
@@ -32,11 +48,11 @@ extension [T](edge: EdgeLike[T]) {
 }
 
 
-extension [T](g: GraphLike[T, _ <: EdgeLike[_ <: T]]) {
+extension [T](g: GraphLike[T, _ <: EdgeLike[T]]) {
     def toGraphViz: String = {
         val graph = g match {
-            case _: DirectedGraphLike[?, ?] => "digraph"
-            case _: UndirectedGraphLike[?, ?] => "graph"
+            case _: DirectedGraphLike[_, _] => "digraph"
+            case _: UndirectedGraphLike[_, _] => "graph"
         }
 
         val verticesStr = g.getVertices.foldLeft("")((acc, v) => acc + s"${v.toGraphViz};")
@@ -47,8 +63,8 @@ extension [T](g: GraphLike[T, _ <: EdgeLike[_ <: T]]) {
 
     def toGraphVizPretty: String = {
         val graph = g match {
-            case _: DirectedGraphLike[?, ?] => "digraph"
-            case _: UndirectedGraphLike[?, ?] => "graph"
+            case _: DirectedGraphLike[_, _] => "digraph"
+            case _: UndirectedGraphLike[_, _] => "graph"
         }
 
         val verticesStr = g.getVertices.foldLeft("")((acc, v) => acc + s"    ${v.toGraphViz};\n")
@@ -64,7 +80,7 @@ extension (graphViz: String) {
         val vertexRegex = "([0-9]+)(?:\\s*?\\[.*?\\])?\\s*?;?\\n?".r
         graphViz match {
             case vertexRegex(id) => Success(Vertex(id.toInt))
-            case other => Failure(new Exception("Invalid vertex string: " + other))
+            case other => Failure(new VertexDecodingException("Invalid vertex string: " + other))
         }
     }
 
@@ -78,16 +94,16 @@ extension (graphViz: String) {
             case unweightedRegex(v1, "--", v2) => Success(UndirectedEdge[T](Vertex(v1.toInt), Vertex(v2.toInt)))
             case unweightedRegex(v1, "->", v2) => Success(DirectedEdge[T](Vertex(v1.toInt), Vertex(v2.toInt), Direction.Forward))
             case unweightedRegex(v1, "<-", v2) => Success(DirectedEdge[T](Vertex(v1.toInt), Vertex(v2.toInt), Direction.Backward))
-            case other => Failure(new Exception("Invalid edge string: " + other))
+            case other => Failure(new EdgeDecodingException("Invalid edge string: " + other))
         }
     }
 
-    def fromGraphViz[G <: GraphLike[_, _ <: EdgeLike[_]]: ClassTag]: Try[G] = {
+    def fromGraphViz[G <: GraphLike[_, _]: ClassTag]: Try[G] = {
         val matches = "(graph|digraph)\\s*?\\{((?:\\n|.)*?)\\}\\s*?".r.findFirstMatchIn(graphViz).map(m => (m.group(1), m.group(2)))
  
         val graphType = matches.map(_._1).getOrElse("")
         matches.map(_._2) match {
-            case None => Failure(new Exception("Invalid graph string"))
+            case None => Failure(new GraphDecodingException("Invalid graph string"))
             case Some(value) => {       
                 val lines = value.split(";").map(_.strip).filter(_.nonEmpty).toList
                 
@@ -103,7 +119,7 @@ extension (graphViz: String) {
                     case Success(Nil) => graphType match {
                         case "digraph" => Success(DirectedGraph())
                         case "graph" => Success(UndirectedGraph())
-                        case _ => Failure(new Exception("Invalid graph type"))
+                        case _ => Failure(new InvalidGraphTypeException("Invalid graph type"))
                     }
                     case Success(value) => {
                         val weighted = value.map({
@@ -115,31 +131,31 @@ extension (graphViz: String) {
                             case _ => false
                         })
 
-                        if (weighted.exists(_ != weighted.head)) Failure(new Exception("Invalid edge type"))
-                        else if (directed.exists(_ != directed.head)) Failure(new Exception("Invalid edge type"))
+                        if (weighted.exists(_ != weighted.head)) Failure(new InvalidEdgeTypeException("Invalid edge type"))
+                        else if (directed.exists(_ != directed.head)) Failure(new InvalidEdgeTypeException("Invalid edge type"))
                         else (weighted.head, directed.head, graphType) match {
                             case (true, true, "digraph") => Success(WeightedDirectedGraph())
                             case (true, false, "graph") => Success(WeightedUndirectedGraph())
                             case (false, true, "digraph") => Success(DirectedGraph())
                             case (false, false, "graph") => Success(UndirectedGraph())
-                            case _ => Failure(new Exception("Invalid graph type"))
+                            case _ => Failure(new InvalidGraphTypeException("Invalid graph type"))
                         }
                     }
                 } match {
                     case Success(graph: G) => {
                         val verticesGraph = vertices.get.foldLeft(graph)((acc, v) => acc.addVertex(v) match {
                             case g: G => g
-                            case _ => throw new Exception("Invalid graph type")
+                            case _ => throw new InvalidGraphTypeException("Invalid graph type")
                         })
                         val fullGraph = edges.get.foldLeft(verticesGraph)((acc, e) => acc.addEdge(e.asInstanceOf[acc.E]) match {
                             case g: G => g
-                            case _ => throw new Exception("Invalid graph type")
+                            case _ => throw new InvalidGraphTypeException("Invalid graph type")
                         })    
             
                         Success(fullGraph)
                     }
                     case Failure(exception) => Failure(exception)
-                    case g => Failure(new Exception("Invalid graph type"))
+                    case g => Failure(new InvalidGraphTypeException("Invalid graph type"))
                 }
             }
         }
