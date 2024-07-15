@@ -1,8 +1,6 @@
 package com.scala.core
 
 import org.scalatest._
-import com.scala.core._
-
 import zio.json._
 
 class VertexSpec extends UnitSpec {
