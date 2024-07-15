@@ -15,6 +15,14 @@ sealed trait GraphLike[T, Edge <: EdgeLike[T]] {
 
     def getVertices: Set[V] = vertices
 
+    def setVertices(newVertices: Set[V]): Self[T] = {
+        create(newVertices, this.edges.filter((e) => newVertices.contains(e.v1) && newVertices.contains(e.v2)))
+    }
+
+    def clearVertices: Self[T] = {
+        create(Set.empty, Set.empty)
+    }
+
     def addVertex(v: V): Self[T] = {
         create(this.vertices + v, this.edges)
     }
@@ -25,12 +33,24 @@ sealed trait GraphLike[T, Edge <: EdgeLike[T]] {
 
     def getEdges: Set[E] = edges
 
+    def setEdges(newEdges: Set[E]): Self[T] = {
+        create(this.vertices ++ newEdges.flatMap(e => Set(e.v1, e.v2)), newEdges)
+    }
+
+    def clearEdges: Self[T] = {
+        create(this.vertices, Set.empty)
+    }
+
     def addEdge(e: E): Self[T] = {
         create(this.vertices + e.v1 + e.v2, this.edges + e)
     }
 
     def removeEdge(e: E): Self[T] = {
         create(this.vertices, this.edges - e)
+    }
+
+    def removeEdges(e: Set[E]): Self[T] = {
+        create(this.vertices, this.edges -- e)
     }
 
     override def toString(): String = {
