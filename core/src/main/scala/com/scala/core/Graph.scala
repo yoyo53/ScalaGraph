@@ -418,6 +418,8 @@ object DirectedGraph {
         new DirectedGraph[T](Set.empty, Set.empty)
     }
 
+    implicit def constructor[T]: () => DirectedGraph[T] = DirectedGraph[T]
+
     implicit def encoder[T: JsonEncoder]: JsonEncoder[DirectedGraph[T]] = EncoderWithType(classOf[DirectedGraph[T]].getSimpleName)(DeriveJsonEncoder.gen[DirectedGraph[T]])
     implicit def decoder[T: JsonDecoder]: JsonDecoder[DirectedGraph[T]] = DecoderWithType(classOf[DirectedGraph[T]].getSimpleName)(DeriveJsonDecoder.gen[DirectedGraph[T]])
 }
@@ -440,6 +442,8 @@ object UndirectedGraph {
     def apply[T](): UndirectedGraph[T] = {
         new UndirectedGraph[T](Set.empty, Set.empty)
     }
+
+    implicit def constructor[T]: () => UndirectedGraph[T] = UndirectedGraph[T]
 
     implicit def encoder[T: JsonEncoder]: JsonEncoder[UndirectedGraph[T]] = EncoderWithType(classOf[UndirectedGraph[T]].getSimpleName)(DeriveJsonEncoder.gen[UndirectedGraph[T]])
     implicit def decoder[T: JsonDecoder]: JsonDecoder[UndirectedGraph[T]] = DecoderWithType(classOf[UndirectedGraph[T]].getSimpleName)(DeriveJsonDecoder.gen[UndirectedGraph[T]])
@@ -548,6 +552,8 @@ object WeightedDirectedGraph {
         new WeightedDirectedGraph[T](Set.empty, Set.empty)
     }
 
+    implicit def constructor[T]: () => WeightedDirectedGraph[T] = WeightedDirectedGraph[T]
+
     implicit def encoder[T: JsonEncoder]: JsonEncoder[WeightedDirectedGraph[T]] = EncoderWithType(classOf[WeightedDirectedGraph[T]].getSimpleName)(DeriveJsonEncoder.gen[WeightedDirectedGraph[T]])
     implicit def decoder[T: JsonDecoder]: JsonDecoder[WeightedDirectedGraph[T]] = DecoderWithType(classOf[WeightedDirectedGraph[T]].getSimpleName)(DeriveJsonDecoder.gen[WeightedDirectedGraph[T]])
 }
@@ -570,6 +576,8 @@ object WeightedUndirectedGraph {
     def apply[T](): WeightedUndirectedGraph[T] = {
         new WeightedUndirectedGraph[T](Set.empty, Set.empty)
     }
+
+    implicit def constructor[T]: () => WeightedUndirectedGraph[T] = WeightedUndirectedGraph[T]
 
     implicit def encoder[T: JsonEncoder]: JsonEncoder[WeightedUndirectedGraph[T]] = EncoderWithType(classOf[WeightedUndirectedGraph[T]].getSimpleName)(DeriveJsonEncoder.gen[WeightedUndirectedGraph[T]])
     implicit def decoder[T: JsonDecoder]: JsonDecoder[WeightedUndirectedGraph[T]] = DecoderWithType(classOf[WeightedUndirectedGraph[T]].getSimpleName)(DeriveJsonDecoder.gen[WeightedUndirectedGraph[T]])
