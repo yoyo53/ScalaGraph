@@ -37,20 +37,16 @@ object GraphRoutes {
                 for {
                     body <- req.body.asString
                     service <- ZIO.service[StateService]
-                    state <- service.getState[G]
-                    response <- state match {
-                        case None => ZIO.succeed(Response.status(Status.MethodNotAllowed))
-                        case Some(graph) => body.fromJson[G] match {
-                            case Left(value) => ZIO.succeed(Response.status(Status.BadRequest))
-                            case Right(gr) => for {
-                                _ <- service.setState(gr)
-                                s <- service.getState[G]
-                                r <- s match {
-                                    case None => ZIO.succeed(Response.status(Status.InternalServerError))
-                                    case Some(g) => ZIO.succeed(Response.json(g.toJson))
-                                }
-                            } yield r
-                        }
+                    response <- body.fromJson[G] match {
+                        case Left(value) => ZIO.succeed(Response.status(Status.BadRequest))
+                        case Right(gr) => for {
+                            _ <- service.setState(gr)
+                            s <- service.getState[G]
+                            r <- s match {
+                                case None => ZIO.succeed(Response.status(Status.InternalServerError))
+                                case Some(g) => ZIO.succeed(Response.json(g.toJson))
+                            }
+                        } yield r
                     }
                 } yield response
             }).sandbox,
