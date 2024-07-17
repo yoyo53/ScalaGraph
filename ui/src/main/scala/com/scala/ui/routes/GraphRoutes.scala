@@ -58,6 +58,35 @@ object GraphRoutes {
                 } yield response
             }).sandbox,
         ) ++
+        "graph-viz" / Routes(
+            Method.GET / Root -> handler((req: Request) => {
+                for {
+                    service <- ZIO.service[StateService]
+                    state <- service.getState[G]
+                    response <- state match {
+                        case None => ZIO.succeed(Response.status(Status.MethodNotAllowed))
+                        case Some(g) => ZIO.succeed(Response.json(g.toGraphViz))
+                    }
+                } yield response
+            }).sandbox,
+            Method.POST / Root -> handler((req: Request) => {
+                for {
+                    body <- req.body.asString
+                    service <- ZIO.service[StateService]
+                    response <- body.fromGraphViz[G] match {
+                        case Failure(_) => ZIO.succeed(Response.status(Status.BadRequest))
+                        case Success(gr) => for {
+                            _ <- service.setState(gr)
+                            s <- service.getState[G]
+                            r <- s match {
+                                case None => ZIO.succeed(Response.status(Status.InternalServerError))
+                                case Some(g) => ZIO.succeed(Response.json(g.toGraphViz))
+                            }
+                        } yield r
+                    }
+                } yield response
+            }).sandbox,
+        ) ++
         "matrix" / Routes(
             Method.GET / "adjacency" -> handler((req: Request) => {
                 for {
