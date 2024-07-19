@@ -409,21 +409,23 @@ sealed trait UndirectedGraphLike[T, Edge <: UndirectedEdgeLike[T]] extends Graph
         getNeighborsEdges(v)
     }
 
-    def hasCycle: Boolean = {
+        def hasCycle: Boolean = {
         @annotation.tailrec
         def _hasCycle(stack: List[(V, Option[V])], temp: Set[V], perm: Set[V]): Boolean = {
-            val (head, parent) = stack.head
             if (stack.isEmpty) {
                 false
-            } else if ((getSuccessors(head) - parent.getOrElse(null)).forall(perm.contains(_))) {
-                _hasCycle(stack.tail, temp - head, perm + head)
-            } else if (perm.contains(head)) {
-                _hasCycle(stack.tail, temp, perm)
-            } else if (temp.contains(head)) {
-                true
             } else {
-                val successors = getSuccessors(head) - parent.getOrElse(null)
-                _hasCycle(successors.map(s => (s, Some(head))).toList ++ stack, temp + head, perm)
+                val (head, parent) = stack.head
+                if ((getSuccessors(head) - parent.getOrElse(null)).forall(perm.contains(_))) {
+                    _hasCycle(stack.tail, temp - head, perm + head)
+                } else if (perm.contains(head)) {
+                    _hasCycle(stack.tail, temp, perm)
+                } else if (temp.contains(head)) {
+                    true
+                } else {
+                    val successors = getSuccessors(head) - parent.getOrElse(null)
+                    _hasCycle(successors.map(s => (s, Some(head))).toList ++ stack, temp + head, perm)
+                }
             }
         }
 

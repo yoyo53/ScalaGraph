@@ -5,7 +5,7 @@ import zio.json._
 
 import scala.collection.mutable.HashMap
 
-class GraphSpec extends UnitSpec {
+class DirectedGraphSpec extends UnitSpec {
   var graph: DirectedGraph[Int] = _
   override def beforeEach(): Unit = {
     graph = DirectedGraph[Int]()
