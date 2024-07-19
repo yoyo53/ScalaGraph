@@ -98,10 +98,18 @@ sealed trait GraphLike[T, Edge <: EdgeLike[T]] {
     def getIncidenceMatrix: List[List[Int]] = {
         val verticesList = vertices.toList
         val edgesList = edges.toList
-        verticesList.map((v) => {
-            edgesList.map((e) => {
-                if ((e.v2 == v && e.direction != Direction.Backward) || (e.v1 == v && e.direction != Direction.Forward)) 1
-                else if (e.v1 == v || e.v2 == v) -1
+        //verticesList.map((v) => {
+        //    edgesList.map((e) => {
+        //        if ((e.v2 == v && e.direction != Direction.Backward) || (e.v1 == v && e.direction != Direction.Forward)) 1
+        //        else if (e.v1 == v || e.v2 == v) -1
+        //        else 0
+        //    })
+        //})
+
+        edgesList.map((e) => {
+            verticesList.map((v) => {
+                if ((e.v1 == v && e.direction == Direction.Forward) || (e.v2 == v && e.direction == Direction.Backward)) 1
+                else if ((e.v2 == v && e.direction == Direction.Forward) || (e.v1 == v && e.direction == Direction.Backward)) -1
                 else 0
             })
         })
@@ -166,6 +174,13 @@ sealed trait GraphLike[T, Edge <: EdgeLike[T]] {
     }
 
     def hasCycle: Boolean
+
+    /**
+     * Calculates the shortest paths between all pairs of vertices in the graph using the Floyd-Warshall algorithm.
+     *
+     * @return A `Try` containing a `Map` of pairs of vertices to lists of edges representing the shortest paths.
+     *         If the graph has a negative cycle, a `Failure` with a `NegativeCycleException` is returned.
+     */
 
     def getShortestPathsFloydWarshall: Try[Map[(V, V), List[E]]] = {
         @annotation.tailrec
@@ -394,21 +409,23 @@ sealed trait UndirectedGraphLike[T, Edge <: UndirectedEdgeLike[T]] extends Graph
         getNeighborsEdges(v)
     }
 
-    def hasCycle: Boolean = {
+        def hasCycle: Boolean = {
         @annotation.tailrec
         def _hasCycle(stack: List[(V, Option[V])], temp: Set[V], perm: Set[V]): Boolean = {
-            val (head, parent) = stack.head
             if (stack.isEmpty) {
                 false
-            } else if ((getSuccessors(head) - parent.getOrElse(null)).forall(perm.contains(_))) {
-                _hasCycle(stack.tail, temp - head, perm + head)
-            } else if (perm.contains(head)) {
-                _hasCycle(stack.tail, temp, perm)
-            } else if (temp.contains(head)) {
-                true
             } else {
-                val successors = getSuccessors(head) - parent.getOrElse(null)
-                _hasCycle(successors.map(s => (s, Some(head))).toList ++ stack, temp + head, perm)
+                val (head, parent) = stack.head
+                if ((getSuccessors(head) - parent.getOrElse(null)).forall(perm.contains(_))) {
+                    _hasCycle(stack.tail, temp - head, perm + head)
+                } else if (perm.contains(head)) {
+                    _hasCycle(stack.tail, temp, perm)
+                } else if (temp.contains(head)) {
+                    true
+                } else {
+                    val successors = getSuccessors(head) - parent.getOrElse(null)
+                    _hasCycle(successors.map(s => (s, Some(head))).toList ++ stack, temp + head, perm)
+                }
             }
         }
 
