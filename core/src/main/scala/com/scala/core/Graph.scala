@@ -175,6 +175,13 @@ sealed trait GraphLike[T, Edge <: EdgeLike[T]] {
 
     def hasCycle: Boolean
 
+    /**
+     * Calculates the shortest paths between all pairs of vertices in the graph using the Floyd-Warshall algorithm.
+     *
+     * @return A `Try` containing a `Map` of pairs of vertices to lists of edges representing the shortest paths.
+     *         If the graph has a negative cycle, a `Failure` with a `NegativeCycleException` is returned.
+     */
+
     def getShortestPathsFloydWarshall: Try[Map[(V, V), List[E]]] = {
         @annotation.tailrec
         def _getPaths(paths: Map[(V, V), Option[E]], source: V, dest: V, current: E, result: List[E]): List[E] = {
