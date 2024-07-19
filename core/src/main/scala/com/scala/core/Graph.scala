@@ -89,7 +89,7 @@ sealed trait GraphLike[T, Edge <: EdgeLike[T]] {
                 if (u == v) {
                     successors.count((e) => e.v1 == u && e.v2 == u)
                 } else {
-                successors.count((e) => e.v1 == u || e.v2 == u)
+                    successors.count((e) => e.v1 == u || e.v2 == u)
                 }
             })
         })
@@ -442,10 +442,10 @@ object DirectedGraph {
         new DirectedGraph[T](Set.empty, Set.empty)
     }
 
-    implicit def constructor[T]: () => DirectedGraph[T] = DirectedGraph[T]
+    given constructor[T]: (() => DirectedGraph[T]) = apply[T]
 
-    implicit def encoder[T: JsonEncoder]: JsonEncoder[DirectedGraph[T]] = EncoderWithType(classOf[DirectedGraph[T]].getSimpleName)(DeriveJsonEncoder.gen[DirectedGraph[T]])
-    implicit def decoder[T: JsonDecoder]: JsonDecoder[DirectedGraph[T]] = DecoderWithType(classOf[DirectedGraph[T]].getSimpleName)(DeriveJsonDecoder.gen[DirectedGraph[T]])
+    given encoder[T: JsonEncoder]: JsonEncoder[DirectedGraph[T]] = EncoderWithType(classOf[DirectedGraph[T]].getSimpleName)(using DeriveJsonEncoder.gen[DirectedGraph[T]])
+    given decoder[T: JsonDecoder]: JsonDecoder[DirectedGraph[T]] = DecoderWithType(classOf[DirectedGraph[T]].getSimpleName)(using DeriveJsonDecoder.gen[DirectedGraph[T]])
 }
 
 
@@ -467,10 +467,10 @@ object UndirectedGraph {
         new UndirectedGraph[T](Set.empty, Set.empty)
     }
 
-    implicit def constructor[T]: () => UndirectedGraph[T] = UndirectedGraph[T]
+    given constructor[T]: (() => UndirectedGraph[T]) = apply[T]
 
-    implicit def encoder[T: JsonEncoder]: JsonEncoder[UndirectedGraph[T]] = EncoderWithType(classOf[UndirectedGraph[T]].getSimpleName)(DeriveJsonEncoder.gen[UndirectedGraph[T]])
-    implicit def decoder[T: JsonDecoder]: JsonDecoder[UndirectedGraph[T]] = DecoderWithType(classOf[UndirectedGraph[T]].getSimpleName)(DeriveJsonDecoder.gen[UndirectedGraph[T]])
+    given encoder[T: JsonEncoder]: JsonEncoder[UndirectedGraph[T]] = EncoderWithType(classOf[UndirectedGraph[T]].getSimpleName)(using DeriveJsonEncoder.gen[UndirectedGraph[T]])
+    given decoder[T: JsonDecoder]: JsonDecoder[UndirectedGraph[T]] = DecoderWithType(classOf[UndirectedGraph[T]].getSimpleName)(using DeriveJsonDecoder.gen[UndirectedGraph[T]])
 }
 
 
@@ -576,10 +576,10 @@ object WeightedDirectedGraph {
         new WeightedDirectedGraph[T](Set.empty, Set.empty)
     }
 
-    implicit def constructor[T]: () => WeightedDirectedGraph[T] = WeightedDirectedGraph[T]
+    given constructor[T]: (() => WeightedDirectedGraph[T]) = apply[T]
 
-    implicit def encoder[T: JsonEncoder]: JsonEncoder[WeightedDirectedGraph[T]] = EncoderWithType(classOf[WeightedDirectedGraph[T]].getSimpleName)(DeriveJsonEncoder.gen[WeightedDirectedGraph[T]])
-    implicit def decoder[T: JsonDecoder]: JsonDecoder[WeightedDirectedGraph[T]] = DecoderWithType(classOf[WeightedDirectedGraph[T]].getSimpleName)(DeriveJsonDecoder.gen[WeightedDirectedGraph[T]])
+    given encoder[T: JsonEncoder]: JsonEncoder[WeightedDirectedGraph[T]] = EncoderWithType(classOf[WeightedDirectedGraph[T]].getSimpleName)(using DeriveJsonEncoder.gen[WeightedDirectedGraph[T]])
+    given decoder[T: JsonDecoder]: JsonDecoder[WeightedDirectedGraph[T]] = DecoderWithType(classOf[WeightedDirectedGraph[T]].getSimpleName)(using DeriveJsonDecoder.gen[WeightedDirectedGraph[T]])
 }
 
 
@@ -601,8 +601,8 @@ object WeightedUndirectedGraph {
         new WeightedUndirectedGraph[T](Set.empty, Set.empty)
     }
 
-    implicit def constructor[T]: () => WeightedUndirectedGraph[T] = WeightedUndirectedGraph[T]
+    given constructor[T]: (() => WeightedUndirectedGraph[T]) = apply[T]
 
-    implicit def encoder[T: JsonEncoder]: JsonEncoder[WeightedUndirectedGraph[T]] = EncoderWithType(classOf[WeightedUndirectedGraph[T]].getSimpleName)(DeriveJsonEncoder.gen[WeightedUndirectedGraph[T]])
-    implicit def decoder[T: JsonDecoder]: JsonDecoder[WeightedUndirectedGraph[T]] = DecoderWithType(classOf[WeightedUndirectedGraph[T]].getSimpleName)(DeriveJsonDecoder.gen[WeightedUndirectedGraph[T]])
+    given encoder[T: JsonEncoder]: JsonEncoder[WeightedUndirectedGraph[T]] = EncoderWithType(classOf[WeightedUndirectedGraph[T]].getSimpleName)(using DeriveJsonEncoder.gen[WeightedUndirectedGraph[T]])
+    given decoder[T: JsonDecoder]: JsonDecoder[WeightedUndirectedGraph[T]] = DecoderWithType(classOf[WeightedUndirectedGraph[T]].getSimpleName)(using DeriveJsonDecoder.gen[WeightedUndirectedGraph[T]])
 }

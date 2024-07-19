@@ -11,6 +11,6 @@ object Vertex {
 
     def apply[T](id: Int): Vertex[T] = new Vertex[T](id, None)
 
-    implicit def encoder[T: JsonEncoder]: JsonEncoder[Vertex[T]] = DeriveJsonEncoder.gen[Vertex[T]]
-    implicit def decoder[T: JsonDecoder]: JsonDecoder[Vertex[T]] = DeriveJsonDecoder.gen[Vertex[T]]
+    given encoder[T: JsonEncoder]: JsonEncoder[Vertex[T]] = DeriveJsonEncoder.gen[Vertex[T]]
+    given decoder[T: JsonDecoder]: JsonDecoder[Vertex[T]] = DeriveJsonDecoder.gen[Vertex[T]]
 }

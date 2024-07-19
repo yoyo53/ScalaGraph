@@ -10,7 +10,7 @@ import scala.reflect.ClassTag
 import scala.util.{Failure, Success}
 
 object GraphRoutes {
-    def routes[T : JsonCodec, E <: EdgeLike[T] : JsonCodec, G <: GraphLike[T, E] : JsonCodec : ClassTag](implicit constructor : () => G) = {
+    def routes[T : JsonCodec, E <: EdgeLike[T] : JsonCodec, G <: GraphLike[T, E] : JsonCodec : ClassTag](using constructor : () => G) = {
         Root / Routes(
             Method.GET / Root -> handler((req: Request) => {
                 for {
