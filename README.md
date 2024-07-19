@@ -124,18 +124,18 @@ The core module can be imported and used on its own as a complete graph managing
 ```scala
 val vertex1 = Vertex(1)
 val vertex2 = Vertex(2)
-val edge = DirectedEdge(vertex1, vertex2)
-val graph = new DirectedGraph[Int]()
-   addVertex(vertex1)
-   addVertex(vertex2)
-   addEdge(edge)
+val edge = DirectedEdge(vertex1, vertex2, Direction.Forward)
+val graph = DirectedGraph[Int]()
+   .addVertex(vertex1)
+   .addVertex(vertex2)
+   .addEdge(edge)
 ```
 
 #### JSON Serialization and Deserialization
 
 ```scala
-val jsonGraph = graph.toJson
-val graph2 = jsonGraph.fromJson[DirectedGraph[Int]]
+val graphVizGraph = graph.toJson
+val graph3 = jsonGraph.fromJson[DirectedGraph[Int]]
 ```
 
 #### Graph Viz Serialization and Deserialization
