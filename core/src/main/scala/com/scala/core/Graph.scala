@@ -86,7 +86,11 @@ sealed trait GraphLike[T, Edge <: EdgeLike[T]] {
         verticesList.map((v) => {
             val successors = getSuccessorsEdges(v)
             verticesList.map((u) => {
+                if (u == v) {
+                    successors.count((e) => e.v1 == u && e.v2 == u)
+                } else {
                 successors.count((e) => e.v1 == u || e.v2 == u)
+                }
             })
         })
     }
