@@ -134,15 +134,15 @@ val graph = DirectedGraph[Int]()
 #### JSON Serialization and Deserialization
 
 ```scala
-val graphVizGraph = graph.toJson
-val graph3 = jsonGraph.fromJson[DirectedGraph[Int]]
+val jsonGraph = graph.toJson
+val graph2 = jsonGraph.fromJson[DirectedGraph[Int]]
 ```
 
 #### Graph Viz Serialization and Deserialization
 
 ```scala
-val jsonGraph = graph.toGraphViz
-val graph2 = jsonGraph.fromGraphViz[DirectedGraph[Int]]
+val graphVizGraph = graph.toGraphViz
+val graph3 = jsonGraph.fromGraphViz[DirectedGraph[Int]]
 ```
 
 ### ZIO Application
