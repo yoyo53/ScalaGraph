@@ -98,10 +98,18 @@ sealed trait GraphLike[T, Edge <: EdgeLike[T]] {
     def getIncidenceMatrix: List[List[Int]] = {
         val verticesList = vertices.toList
         val edgesList = edges.toList
-        verticesList.map((v) => {
-            edgesList.map((e) => {
-                if ((e.v2 == v && e.direction != Direction.Backward) || (e.v1 == v && e.direction != Direction.Forward)) 1
-                else if (e.v1 == v || e.v2 == v) -1
+        //verticesList.map((v) => {
+        //    edgesList.map((e) => {
+        //        if ((e.v2 == v && e.direction != Direction.Backward) || (e.v1 == v && e.direction != Direction.Forward)) 1
+        //        else if (e.v1 == v || e.v2 == v) -1
+        //        else 0
+        //    })
+        //})
+
+        edgesList.map((e) => {
+            verticesList.map((v) => {
+                if ((e.v1 == v && e.direction == Direction.Forward) || (e.v2 == v && e.direction == Direction.Backward)) 1
+                else if ((e.v2 == v && e.direction == Direction.Forward) || (e.v1 == v && e.direction == Direction.Backward)) -1
                 else 0
             })
         })

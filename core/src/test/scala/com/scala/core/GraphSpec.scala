@@ -273,7 +273,7 @@ class GraphSpec extends UnitSpec with BeforeAndAfterEach {
     }
 
    it should "get the adjacency matrix of the graph" in {
-    // Create two vertices
+    // Graph with 4 vertices and 5 edges
     graph = graph.addVertex(Vertex(3))
       .addVertex(Vertex(4))
       .addEdge(DirectedEdge(Vertex(1), Vertex(3), Direction.Forward))
@@ -284,63 +284,99 @@ class GraphSpec extends UnitSpec with BeforeAndAfterEach {
 
 
     // Check if the adjacency matrix is correct
-    val adjacencyMatrix = graph.getLaplacianMatrix
+    val adjacencyMatrix = graph.getAdgacencyMatrix
     assert(graph.getEdges.size == 5)
     
     //Afficher la matrice d'adjacence
 
     assert(adjacencyMatrix != null)
     assert(adjacencyMatrix.size == 4)
-    assert(adjacencyMatrix(0).size == 4)
-    assert(adjacencyMatrix(1).size == 4)
-    assert(adjacencyMatrix(2).size == 4)
-    assert(adjacencyMatrix(3).size == 4)
 
-    assert(adjacencyMatrix(0)(0) == 0)
-    assert(adjacencyMatrix(0)(1) == -1)
-    assert(adjacencyMatrix(0)(2) == -1)
-    assert(adjacencyMatrix(0)(3) == -1)
-    assert(adjacencyMatrix(1)(0) == 0)
-
-
-
-    assert(adjacencyMatrix(1)(1) == 3)
-    //assert(adjacencyMatrix(1)(2) == 0)
-    //assert(adjacencyMatrix(1)(3) == -1)
-    //assert(adjacencyMatrix(2)(0) == 0)
-    //assert(adjacencyMatrix(2)(1) == 0)
-//
-    //assert(adjacencyMatrix(2)(2) == 0)
-    //assert(adjacencyMatrix(2)(3) == -1)
-    //assert(adjacencyMatrix(3)(0) == 0)
-    //assert(adjacencyMatrix(3)(1) == 0)
-    //assert(adjacencyMatrix(3)(2) == 0)
-//
-    //assert(adjacencyMatrix(3)(3) == 0)
+    assert(adjacencyMatrix(0) == List(0, 1, 1, 1))
+    assert(adjacencyMatrix(1) == List(0, 0, 0, 0))
+    assert(adjacencyMatrix(2) == List(0, 1, 0, 0))
+    assert(adjacencyMatrix(3) == List(0, 1, 0, 0))
     }
 
    it should "get the incidence matrix of the graph" in {
+    // Graph with 4 vertices and 5 edges
+    graph = graph.addVertex(Vertex(3))
+      .addVertex(Vertex(4))
+      .addEdge(DirectedEdge(Vertex(1), Vertex(3), Direction.Forward))
+      .addEdge(DirectedEdge(Vertex(3), Vertex(2), Direction.Forward))
+      .addEdge(DirectedEdge(Vertex(4), Vertex(2), Direction.Forward))
+      .addEdge(DirectedEdge(Vertex(1), Vertex(4), Direction.Forward))
+
       // Check if the incidence matrix is correct 
       val incidenceMatrix = graph.getIncidenceMatrix
       assert(incidenceMatrix != null)
-      assert(incidenceMatrix.size == 2)
-      assert(incidenceMatrix(0).size == 1)
-      assert(incidenceMatrix(1).size == 1)
-      assert(incidenceMatrix(0)(0) == 1)
-      //assert(incidenceMatrix(1)(0) == -1)
-
       
+      // Edges
+      assert(incidenceMatrix.size == 5)
+      assert(incidenceMatrix(0) == List(0, -1, 1, 0)) //List(1, -1, 0, 0)
+      assert(incidenceMatrix(1) == List(0, -1, 0, 1)) //List(1, 0, -1, 0)
+      assert(incidenceMatrix(2) == List(1, 0, -1, 0)) //List(0, -1, 1, 0)
+      assert(incidenceMatrix(3) == List(1, 0, 0, -1)) //List(0, -1, 0, 1)
+      assert(incidenceMatrix(4) == List(1, -1, 0, 0)) //List(1, 0, 0, -1)
     }
 
    it should "get the degree matrix of the graph" in {
+    // Graph with 4 vertices and 5 edges
+    graph = graph.addVertex(Vertex(3))
+      .addVertex(Vertex(4))
+      .addEdge(DirectedEdge(Vertex(1), Vertex(3), Direction.Forward))
+      .addEdge(DirectedEdge(Vertex(3), Vertex(2), Direction.Forward))
+      .addEdge(DirectedEdge(Vertex(4), Vertex(2), Direction.Forward))
+      .addEdge(DirectedEdge(Vertex(1), Vertex(4), Direction.Forward))
+
+      // Check if the degree matrix is correct
+      val degreeMatrix = graph.getDegreeMatrix
+      assert(degreeMatrix != null)
+      assert(degreeMatrix.size == 4)
+      assert(degreeMatrix(0) == List(3, 0, 0, 0))
+      assert(degreeMatrix(1) == List(0, 3, 0, 0))
+      assert(degreeMatrix(2) == List(0, 0, 2, 0))
+      assert(degreeMatrix(3) == List(0, 0, 0, 2))
       
     }
 
    it should "get the Laplacian matrix of the graph" in {
-      
+    // Graph with 4 vertices and 5 edges
+    graph = graph.addVertex(Vertex(3))
+      .addVertex(Vertex(4))
+      .addEdge(DirectedEdge(Vertex(1), Vertex(3), Direction.Forward))
+      .addEdge(DirectedEdge(Vertex(3), Vertex(2), Direction.Forward))
+      .addEdge(DirectedEdge(Vertex(4), Vertex(2), Direction.Forward))
+      .addEdge(DirectedEdge(Vertex(1), Vertex(4), Direction.Forward))
+
+      // Check if the Laplacian matrix is correct
+      val laplacianMatrix = graph.getLaplacianMatrix
+      assert(laplacianMatrix != null)
+      assert(laplacianMatrix.size == 4)
+      assert(laplacianMatrix(0) == List(3, -1, -1, -1))
+      assert(laplacianMatrix(1) == List(0, 3, 0, 0))
+      assert(laplacianMatrix(2) == List(0, -1, 2, 0))
+      assert(laplacianMatrix(3) == List(0, -1, 0, 2))
+    }
+
+    it should "have a Laplacian matrix == degreeMatrix - adjacencyMatrix" in {
+    // Graph with 4 vertices and 5 edges
+    graph = graph.addVertex(Vertex(3))
+      .addVertex(Vertex(4))
+      .addEdge(DirectedEdge(Vertex(1), Vertex(3), Direction.Forward))
+      .addEdge(DirectedEdge(Vertex(3), Vertex(2), Direction.Forward))
+      .addEdge(DirectedEdge(Vertex(4), Vertex(2), Direction.Forward))
+      .addEdge(DirectedEdge(Vertex(1), Vertex(4), Direction.Forward))
+      //Perform degreeMatrix - adjacencyMatrix == laplacianMatrix
+      val laplacianMatrix = graph.getLaplacianMatrix
+      val degreeMatrix = graph.getDegreeMatrix
+      val adjacencyMatrix = graph.getAdgacencyMatrix
+      val laplacianMatrix2 = degreeMatrix.zip(adjacencyMatrix).map { case (x, y) => x.zip(y).map { case (a, b) => a - b } }
+      assert(laplacianMatrix == laplacianMatrix2)
     }
 
    it should "traverse the graph using depth-first search" in {
+
       
     }
 
