@@ -17,11 +17,11 @@ enum Direction {
 type DirectedDirection = Direction.Forward.type | Direction.Backward.type
 
 object Direction {
-    implicit def encoder: JsonEncoder[Direction] = DeriveJsonEncoder.gen[Direction]
-    implicit def decoder: JsonDecoder[Direction] = DeriveJsonDecoder.gen[Direction]
+    given encoder: JsonEncoder[Direction] = DeriveJsonEncoder.gen[Direction]
+    given decoder: JsonDecoder[Direction] = DeriveJsonDecoder.gen[Direction]
     
-    implicit def directedEncoder: JsonEncoder[DirectedDirection] = JsonEncoder[Direction].contramap(d => d: Direction)
-    implicit def directedDecoder: JsonDecoder[DirectedDirection] = JsonDecoder[Direction].mapOrFail({
+    given directedEncoder: JsonEncoder[DirectedDirection] = JsonEncoder[Direction].contramap(d => d: Direction)
+    given directedDecoder: JsonDecoder[DirectedDirection] = JsonDecoder[Direction].mapOrFail({
         case d: DirectedDirection => Right(d)
         case other => Left(s"Invalid directed direction: $other")
     })

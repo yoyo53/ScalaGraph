@@ -54,8 +54,8 @@ case class DirectedEdge[+T](val v1: Vertex[T], val v2: Vertex[T], val direction:
 }
 
 object DirectedEdge {
-    implicit def encoder[T: JsonEncoder]: JsonEncoder[DirectedEdge[T]] = DeriveJsonEncoder.gen[DirectedEdge[T]]
-    implicit def decoder[T: JsonDecoder]: JsonDecoder[DirectedEdge[T]] = DeriveJsonDecoder.gen[DirectedEdge[T]]
+    given encoder[T: JsonEncoder]: JsonEncoder[DirectedEdge[T]] = DeriveJsonEncoder.gen[DirectedEdge[T]]
+    given decoder[T: JsonDecoder]: JsonDecoder[DirectedEdge[T]] = DeriveJsonDecoder.gen[DirectedEdge[T]]
 }
 
 
@@ -64,8 +64,8 @@ case class UndirectedEdge[+T](val v1: Vertex[T], val v2: Vertex[T]) extends Undi
 }
 
 object UndirectedEdge {
-    implicit def encoder[T: JsonEncoder]: JsonEncoder[UndirectedEdge[T]] = DeriveJsonEncoder.gen[UndirectedEdge[T]]
-    implicit def decoder[T: JsonDecoder]: JsonDecoder[UndirectedEdge[T]] = DeriveJsonDecoder.gen[UndirectedEdge[T]]
+    given encoder[T: JsonEncoder]: JsonEncoder[UndirectedEdge[T]] = DeriveJsonEncoder.gen[UndirectedEdge[T]]
+    given decoder[T: JsonDecoder]: JsonDecoder[UndirectedEdge[T]] = DeriveJsonDecoder.gen[UndirectedEdge[T]]
 }
 
 
@@ -78,11 +78,11 @@ object WeightedDirectedEdge {
         new WeightedDirectedEdge(v1, v2, direction, Some(weight))
     }
 
-    implicit def someIntEncoder: JsonEncoder[Some[Int]] = JsonEncoder[Int].contramap(_.get)
-    implicit def someIntDecoder: JsonDecoder[Some[Int]] = JsonDecoder[Int].map(Some(_))
+    given someIntEncoder: JsonEncoder[Some[Int]] = JsonEncoder[Int].contramap(_.get)
+    given someIntDecoder: JsonDecoder[Some[Int]] = JsonDecoder[Int].map(Some(_))
 
-    implicit def encoder[T: JsonEncoder]: JsonEncoder[WeightedDirectedEdge[T]] = DeriveJsonEncoder.gen[WeightedDirectedEdge[T]]
-    implicit def decoder[T: JsonDecoder]: JsonDecoder[WeightedDirectedEdge[T]] = DeriveJsonDecoder.gen[WeightedDirectedEdge[T]]
+    given encoder[T: JsonEncoder]: JsonEncoder[WeightedDirectedEdge[T]] = DeriveJsonEncoder.gen[WeightedDirectedEdge[T]]
+    given decoder[T: JsonDecoder]: JsonDecoder[WeightedDirectedEdge[T]] = DeriveJsonDecoder.gen[WeightedDirectedEdge[T]]
 }
 
 
@@ -95,9 +95,9 @@ object WeightedUndirectedEdge {
         new WeightedUndirectedEdge(v1, v2, Some(weight))
     }
 
-    implicit def someIntEncoder: JsonEncoder[Some[Int]] = JsonEncoder[Int].contramap(_.get)
-    implicit def someIntDecoder: JsonDecoder[Some[Int]] = JsonDecoder[Int].map(Some(_))
+    given someIntEncoder: JsonEncoder[Some[Int]] = JsonEncoder[Int].contramap(_.get)
+    given someIntDecoder: JsonDecoder[Some[Int]] = JsonDecoder[Int].map(Some(_))
 
-    implicit def encoder[T: JsonEncoder]: JsonEncoder[WeightedUndirectedEdge[T]] = DeriveJsonEncoder.gen[WeightedUndirectedEdge[T]]
-    implicit def decoder[T: JsonDecoder]: JsonDecoder[WeightedUndirectedEdge[T]] = DeriveJsonDecoder.gen[WeightedUndirectedEdge[T]]
+    given encoder[T: JsonEncoder]: JsonEncoder[WeightedUndirectedEdge[T]] = DeriveJsonEncoder.gen[WeightedUndirectedEdge[T]]
+    given decoder[T: JsonDecoder]: JsonDecoder[WeightedUndirectedEdge[T]] = DeriveJsonDecoder.gen[WeightedUndirectedEdge[T]]
 }
