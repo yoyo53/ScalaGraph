@@ -17,15 +17,15 @@ object StateService {
         for {
             ref <- Ref.make[Option[GraphLike[_, _]]](None)
         } yield new StateService {
-            override def setState[State <: GraphLike[_, _] : JsonCodec](state: State): UIO[Unit] = ref.set(Some(state))
-            override def getState[State <: GraphLike[_, _] : JsonCodec : ClassTag]: UIO[Option[State]] = for {
+            def setState[State <: GraphLike[_, _] : JsonCodec](state: State): UIO[Unit] = ref.set(Some(state))
+            def getState[State <: GraphLike[_, _] : JsonCodec : ClassTag]: UIO[Option[State]] = for {
                 state <- ref.get
                 result <- state match {
                     case Some(s: State) => ZIO.succeed(Some(s))
                     case _ => ZIO.succeed(None)
                 }
             } yield result
-            override def clearState: UIO[Unit] = ref.set(None)
+            def clearState: UIO[Unit] = ref.set(None)
         }
     }
 }
